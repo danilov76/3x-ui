@@ -1,3 +1,5 @@
+> **На чистую VPS:** [команды установки форка](docs/tunnels-release-install.md#установка-панели-на-чистую-vps). Ubuntu 24.04–26.x / Debian 12–13, amd64.
+
 > Готовый комплект обновления существующей 3x-ui 3.8.5: [релиз tunnels-3.8.5-patch2](https://github.com/danilov76/3x-ui/releases/tag/tunnels-3.8.5-patch2). [Установка и откат](docs/tunnels-release-install.md).
 
 > **Форк с VK/Телемостом:** актуальная [инструкция для этого форка](README.md#quick-start-for-this-fork). Команды установки ниже относятся к оригинальному MHSanaei/3x-ui и не устанавливают наш патч. Авторство и лицензия оригинального проекта сохранены.

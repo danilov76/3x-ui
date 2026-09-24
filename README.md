@@ -82,7 +82,7 @@ Built as an enhanced fork of the original X-UI project, 3X-UI adds broader proto
 The patched branch is **`codex/vk-telemost-tunnels`**, based on **v3.8.5**.
 A Linux amd64 upgrade bundle with the panel, tunnel engines, source code and
 licenses is available in [tunnels-3.8.5-patch2](https://github.com/danilov76/3x-ui/releases/tag/tunnels-3.8.5-patch2).
-It upgrades an existing **3x-ui 3.8.5** installation; it does not provision a bare VPS.
+The archive upgrades an existing **3x-ui 3.8.5** installation. A separate fresh-install script is also available for Ubuntu 24.04–26.x / Debian 12–13 amd64.
 See the [installation and rollback instructions](docs/tunnels-release-install.md).
 
 > [!IMPORTANT]
@@ -91,6 +91,15 @@ See the [installation and rollback instructions](docs/tunnels-release-install.md
 > the script URL to `danilov76/3x-ui` is also insufficient: the inherited
 > `install.sh`, update scripts, cloud-init templates and Docker images still
 > target upstream artifacts. A normal upstream panel update replaces the patch.
+
+### Install on a fresh VPS
+
+```bash
+curl -fL https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch2/install-fork.sh -o install-fork.sh
+sudo bash install-fork.sh --host YOUR_SERVER_IP
+```
+
+Replace `YOUR_SERVER_IP` with the public IP or domain. The panel uses port 2053 and a self-signed HTTPS certificate initially. Credentials are stored in `/etc/x-ui/fork-install.txt` (root only). Existing installations are refused. See [setup details and validation limits](docs/tunnels-release-install.md#установка-панели-на-чистую-vps).
 
 ### Build the patched panel
 
