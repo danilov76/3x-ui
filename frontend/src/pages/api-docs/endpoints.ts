@@ -198,6 +198,59 @@ const hwidStatusErrorResponses = {
 
 export const sections: readonly Section[] = [
   {
+    id: 'call-tunnels',
+    title: 'Call tunnels',
+    description:
+      'Admin scope required. Fixed systemd services only; no arbitrary commands. Install the patch and binary bundle on both panels.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/tunnels/list',
+        summary: 'List local tunnels and attached node status',
+        responseSchema: 'TunnelView',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/create',
+        summary: 'Install or attach a tunnel pair; check and add outbound',
+        params: [
+          { name: 'provider', in: 'body (json)', type: 'string' },
+          { name: 'nodeId', in: 'body (json)', type: 'integer' },
+          { name: 'outboundTag', in: 'body (json)', type: 'string' },
+          { name: 'adopt', in: 'body (json)', type: 'boolean' },
+          { name: 'room', in: 'body (json)', type: 'string' },
+          { name: 'address', in: 'body (json)', type: 'string' },
+          { name: 'port', in: 'body (json)', type: 'integer' },
+          { name: 'serverPort', in: 'body (json)', type: 'integer' },
+        ],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/:provider/:action',
+        summary: 'Check, restart or change call link on an attached pair',
+        params: [
+          { name: 'provider', in: 'path', type: 'string' },
+          { name: 'action', in: 'path', type: 'string', desc: 'check, restart, room' },
+          { name: 'room', in: 'body (json)', type: 'string', optional: true },
+        ],
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/tunnels/local/:provider/:action',
+        summary: 'Internal node operation: status, install, probe, restart or room',
+        description:
+          'Admin-only endpoint. Installation carries a shared secret over the authenticated node connection. Never log request bodies.',
+        responseSchema: 'Status',
+        params: [
+          { name: 'provider', in: 'path', type: 'string' },
+          { name: 'action', in: 'path', type: 'string' },
+        ],
+      },
+    ],
+  },
+
+  {
     id: 'authentication',
     title: 'Authentication',
     description:

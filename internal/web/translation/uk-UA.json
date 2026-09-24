@@ -125,7 +125,8 @@
     "openMenu": "Відкрити меню",
     "pinSidebar": "Закріпити бічну панель",
     "unpinSidebar": "Відкріпити бічну панель",
-    "subFormats": "Формати підписки"
+    "subFormats": "Формати підписки",
+    "tunnels": "Tunnels"
   },
   "pages": {
     "login": {
@@ -2256,6 +2257,34 @@
         "badTag": "Недійсний тег",
         "badVlessRoute": "Введіть одне число від 0 до 65535"
       }
+    },
+    "tunnels": {
+      "add": "Connect a tunnel",
+      "intro": "Manage VK and Telemost on this panel and a foreign node. Active service does not guarantee a working tunnel: use Check. Each provider supports one pair.",
+      "local": "This server",
+      "peer": "Foreign node",
+      "outbound": "Outbound tag",
+      "room": "Call link",
+      "exitIP": "Last exit IP",
+      "lastCheck": "Last check",
+      "attach": "Attach existing",
+      "install": "Install and check",
+      "provider": "Provider",
+      "mode": "Mode",
+      "socksPort": "Local SOCKS port",
+      "serverIP": "Foreign server IP",
+      "udpPort": "Foreign UDP port",
+      "attachHint": "Existing services are adopted without reinstalling. Both panels need this patch and the node API needs admin scope.",
+      "installHint": "Requires root systemd panels and the binary bundle on both servers. Allow the foreign UDP port for VK. Adds an outbound after a successful check; routing remains unchanged.",
+      "check": "Check / publish outbound",
+      "changeRoom": "Change call link",
+      "restart": "Restart both ends",
+      "restartWarning": "Active tunnel connections will reconnect. Xray and the other tunnel are not restarted.",
+      "bothEnds": "The new link will be applied to both Telemost endpoints and their services restarted.",
+      "clientOnly": "The VK link is changed on this server only. The foreign VK service does not use a call link.",
+      "done": "Operation completed",
+      "invalidRoom": "Enter a valid HTTPS call link for this provider",
+      "invalidIP": "Enter the foreign server IPv4 or IPv6 address"
     }
   },
   "tgbot": {

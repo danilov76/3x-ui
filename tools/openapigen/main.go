@@ -21,6 +21,7 @@ func main() {
 
 func run(root, outDir string) error {
 	requests := []packageRequest{
+		{Path: resolveRel(root, "internal/calltunnel"), StructAllow: setOf("Status", "Request")},
 		{
 			Path: resolveRel(root, "internal/database/model"),
 			StructAllow: setOf(
@@ -107,6 +108,7 @@ func run(root, outDir string) error {
 				"GeodataTokenIssue",
 				"AmneziaWGLogs",
 				"PeerActivity",
+				"TunnelPair", "TunnelView", "TunnelCreate",
 				"HwidSlotStatus",
 			),
 		},

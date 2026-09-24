@@ -973,6 +973,15 @@ export const EXAMPLES: Record<string, unknown> = {
     "tlsVersion": "1.3",
     "x25519": true
   },
+  "Request": {
+    "address": "",
+    "fingerprint": "",
+    "port": 0,
+    "role": "",
+    "room": "",
+    "secret": "",
+    "serverPort": 0
+  },
   "ServerSettings": {
     "contentPaddingAddition": "",
     "disableCookies": false,
@@ -1017,6 +1026,17 @@ export const EXAMPLES: Record<string, unknown> = {
     "key": "",
     "value": ""
   },
+  "Status": {
+    "error": "",
+    "exitIp": "203.0.113.1",
+    "fingerprint": "",
+    "installed": true,
+    "port": 19094,
+    "provider": "vk",
+    "role": "client",
+    "room": "https://vk.ru/call/join/example",
+    "state": "active"
+  },
   "SubBalancer": {
     "createdAt": 1710000000000,
     "enabled": true,
@@ -1057,6 +1077,41 @@ export const EXAMPLES: Record<string, unknown> = {
     "sni": "",
     "udp_relay_mode": "",
     "zero_rtt_handshake": false
+  },
+  "TunnelCreate": {
+    "address": "",
+    "adopt": false,
+    "nodeId": 0,
+    "outboundTag": "",
+    "port": 0,
+    "provider": "",
+    "room": "",
+    "serverPort": 0
+  },
+  "TunnelPair": {
+    "exitIp": "",
+    "lastCheck": "",
+    "lastError": "",
+    "nodeId": 2,
+    "outboundTag": "koara-vk",
+    "provider": "vk"
+  },
+  "TunnelView": {
+    "error": "",
+    "local": {
+      "error": "",
+      "exitIp": "203.0.113.1",
+      "fingerprint": "",
+      "installed": true,
+      "port": 19094,
+      "provider": "vk",
+      "role": "client",
+      "room": "https://vk.ru/call/join/example",
+      "state": "active"
+    },
+    "pair": null,
+    "peer": null,
+    "provider": "vk"
   },
   "User": {
     "id": 0,

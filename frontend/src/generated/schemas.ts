@@ -3937,6 +3937,40 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Request": {
+    "properties": {
+      "address": {
+        "type": "string"
+      },
+      "fingerprint": {
+        "type": "string"
+      },
+      "port": {
+        "type": "integer"
+      },
+      "role": {
+        "type": "string"
+      },
+      "room": {
+        "type": "string"
+      },
+      "secret": {
+        "type": "string"
+      },
+      "serverPort": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "address",
+      "fingerprint",
+      "port",
+      "role",
+      "room",
+      "serverPort"
+    ],
+    "type": "object"
+  },
   "ServerSettings": {
     "description": "ServerSettings is the \"server\" block of an AmneziaWG inbound's Settings\nJSON: the interface-level configuration shared by every client/peer. The\nlisten port is deliberately not duplicated here — it lives on the inbound\nrow itself (Inbound.Port), like every other protocol.",
     "properties": {
@@ -4098,6 +4132,53 @@ export const SCHEMAS: Record<string, unknown> = {
       "id",
       "key",
       "value"
+    ],
+    "type": "object"
+  },
+  "Status": {
+    "properties": {
+      "error": {
+        "type": "string"
+      },
+      "exitIp": {
+        "example": "203.0.113.1",
+        "type": "string"
+      },
+      "fingerprint": {
+        "type": "string"
+      },
+      "installed": {
+        "example": true,
+        "type": "boolean"
+      },
+      "port": {
+        "example": 19094,
+        "type": "integer"
+      },
+      "provider": {
+        "example": "vk",
+        "type": "string"
+      },
+      "role": {
+        "example": "client",
+        "type": "string"
+      },
+      "room": {
+        "example": "https://vk.ru/call/join/example",
+        "type": "string"
+      },
+      "state": {
+        "example": "active",
+        "type": "string"
+      }
+    },
+    "required": [
+      "installed",
+      "port",
+      "provider",
+      "role",
+      "room",
+      "state"
     ],
     "type": "object"
   },
@@ -4277,6 +4358,111 @@ export const SCHEMAS: Record<string, unknown> = {
       "private_key",
       "udp_relay_mode",
       "zero_rtt_handshake"
+    ],
+    "type": "object"
+  },
+  "TunnelCreate": {
+    "properties": {
+      "address": {
+        "type": "string"
+      },
+      "adopt": {
+        "type": "boolean"
+      },
+      "nodeId": {
+        "type": "integer"
+      },
+      "outboundTag": {
+        "type": "string"
+      },
+      "port": {
+        "type": "integer"
+      },
+      "provider": {
+        "type": "string"
+      },
+      "room": {
+        "type": "string"
+      },
+      "serverPort": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "address",
+      "adopt",
+      "nodeId",
+      "outboundTag",
+      "port",
+      "provider",
+      "room",
+      "serverPort"
+    ],
+    "type": "object"
+  },
+  "TunnelPair": {
+    "properties": {
+      "exitIp": {
+        "type": "string"
+      },
+      "lastCheck": {
+        "type": "string"
+      },
+      "lastError": {
+        "type": "string"
+      },
+      "nodeId": {
+        "example": 2,
+        "type": "integer"
+      },
+      "outboundTag": {
+        "example": "koara-vk",
+        "type": "string"
+      },
+      "provider": {
+        "example": "vk",
+        "type": "string"
+      }
+    },
+    "required": [
+      "nodeId",
+      "outboundTag",
+      "provider"
+    ],
+    "type": "object"
+  },
+  "TunnelView": {
+    "properties": {
+      "error": {
+        "type": "string"
+      },
+      "local": {
+        "$ref": "#/components/schemas/Status"
+      },
+      "pair": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TunnelPair"
+          }
+        ],
+        "nullable": true
+      },
+      "peer": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Status"
+          }
+        ],
+        "nullable": true
+      },
+      "provider": {
+        "example": "vk",
+        "type": "string"
+      }
+    },
+    "required": [
+      "local",
+      "provider"
     ],
     "type": "object"
   },

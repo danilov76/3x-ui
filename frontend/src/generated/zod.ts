@@ -948,6 +948,17 @@ export const RealityScanResultSchema = z.object({
 });
 export type RealityScanResult = z.infer<typeof RealityScanResultSchema>;
 
+export const RequestSchema = z.object({
+  address: z.string(),
+  fingerprint: z.string(),
+  port: z.number().int(),
+  role: z.string(),
+  room: z.string(),
+  secret: z.string().optional(),
+  serverPort: z.number().int(),
+});
+export type Request = z.infer<typeof RequestSchema>;
+
 export const ServerSettingsSchema = z.object({
   contentPaddingAddition: z.string().optional(),
   disableCookies: z.boolean(),
@@ -996,6 +1007,19 @@ export const SettingSchema = z.object({
 });
 export type Setting = z.infer<typeof SettingSchema>;
 
+export const StatusSchema = z.object({
+  error: z.string().optional(),
+  exitIp: z.string().optional(),
+  fingerprint: z.string().optional(),
+  installed: z.boolean(),
+  port: z.number().int(),
+  provider: z.string(),
+  role: z.string(),
+  room: z.string(),
+  state: z.string(),
+});
+export type Status = z.infer<typeof StatusSchema>;
+
 export const SubBalancerSchema = z.object({
   createdAt: z.number().int(),
   enabled: z.boolean(),
@@ -1039,6 +1063,37 @@ export const TuicServerSettingsSchema = z.object({
   zero_rtt_handshake: z.boolean(),
 });
 export type TuicServerSettings = z.infer<typeof TuicServerSettingsSchema>;
+
+export const TunnelCreateSchema = z.object({
+  address: z.string(),
+  adopt: z.boolean(),
+  nodeId: z.number().int(),
+  outboundTag: z.string(),
+  port: z.number().int(),
+  provider: z.string(),
+  room: z.string(),
+  serverPort: z.number().int(),
+});
+export type TunnelCreate = z.infer<typeof TunnelCreateSchema>;
+
+export const TunnelPairSchema = z.object({
+  exitIp: z.string().optional(),
+  lastCheck: z.string().optional(),
+  lastError: z.string().optional(),
+  nodeId: z.number().int(),
+  outboundTag: z.string(),
+  provider: z.string(),
+});
+export type TunnelPair = z.infer<typeof TunnelPairSchema>;
+
+export const TunnelViewSchema = z.object({
+  error: z.string().optional(),
+  local: z.lazy(() => StatusSchema),
+  pair: z.lazy(() => TunnelPairSchema).nullable().optional(),
+  peer: z.lazy(() => StatusSchema).nullable().optional(),
+  provider: z.string(),
+});
+export type TunnelView = z.infer<typeof TunnelViewSchema>;
 
 export const UserSchema = z.object({
   id: z.number().int(),

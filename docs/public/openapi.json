@@ -3963,6 +3963,40 @@
         ],
         "type": "object"
       },
+      "Request": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "fingerprint": {
+            "type": "string"
+          },
+          "port": {
+            "type": "integer"
+          },
+          "role": {
+            "type": "string"
+          },
+          "room": {
+            "type": "string"
+          },
+          "secret": {
+            "type": "string"
+          },
+          "serverPort": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "address",
+          "fingerprint",
+          "port",
+          "role",
+          "room",
+          "serverPort"
+        ],
+        "type": "object"
+      },
       "ServerSettings": {
         "description": "ServerSettings is the \"server\" block of an AmneziaWG inbound's Settings\nJSON: the interface-level configuration shared by every client/peer. The\nlisten port is deliberately not duplicated here — it lives on the inbound\nrow itself (Inbound.Port), like every other protocol.",
         "properties": {
@@ -4124,6 +4158,53 @@
           "id",
           "key",
           "value"
+        ],
+        "type": "object"
+      },
+      "Status": {
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "exitIp": {
+            "example": "203.0.113.1",
+            "type": "string"
+          },
+          "fingerprint": {
+            "type": "string"
+          },
+          "installed": {
+            "example": true,
+            "type": "boolean"
+          },
+          "port": {
+            "example": 19094,
+            "type": "integer"
+          },
+          "provider": {
+            "example": "vk",
+            "type": "string"
+          },
+          "role": {
+            "example": "client",
+            "type": "string"
+          },
+          "room": {
+            "example": "https://vk.ru/call/join/example",
+            "type": "string"
+          },
+          "state": {
+            "example": "active",
+            "type": "string"
+          }
+        },
+        "required": [
+          "installed",
+          "port",
+          "provider",
+          "role",
+          "room",
+          "state"
         ],
         "type": "object"
       },
@@ -4306,6 +4387,111 @@
         ],
         "type": "object"
       },
+      "TunnelCreate": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "adopt": {
+            "type": "boolean"
+          },
+          "nodeId": {
+            "type": "integer"
+          },
+          "outboundTag": {
+            "type": "string"
+          },
+          "port": {
+            "type": "integer"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "room": {
+            "type": "string"
+          },
+          "serverPort": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "address",
+          "adopt",
+          "nodeId",
+          "outboundTag",
+          "port",
+          "provider",
+          "room",
+          "serverPort"
+        ],
+        "type": "object"
+      },
+      "TunnelPair": {
+        "properties": {
+          "exitIp": {
+            "type": "string"
+          },
+          "lastCheck": {
+            "type": "string"
+          },
+          "lastError": {
+            "type": "string"
+          },
+          "nodeId": {
+            "example": 2,
+            "type": "integer"
+          },
+          "outboundTag": {
+            "example": "koara-vk",
+            "type": "string"
+          },
+          "provider": {
+            "example": "vk",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nodeId",
+          "outboundTag",
+          "provider"
+        ],
+        "type": "object"
+      },
+      "TunnelView": {
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "local": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "pair": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TunnelPair"
+              }
+            ],
+            "nullable": true
+          },
+          "peer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Status"
+              }
+            ],
+            "nullable": true
+          },
+          "provider": {
+            "example": "vk",
+            "type": "string"
+          }
+        },
+        "required": [
+          "local",
+          "provider"
+        ],
+        "type": "object"
+      },
       "User": {
         "description": "User represents a user account in the 3x-ui panel.",
         "properties": {
@@ -4370,6 +4556,10 @@
   ],
   "tags": [
     {
+      "name": "Call tunnels",
+      "description": "Admin scope required. Fixed systemd services only; no arbitrary commands. Install the patch and binary bundle on both panels."
+    },
+    {
       "name": "Authentication",
       "description": "Two authentication modes are supported. UI sessions use a cookie set by the login endpoint. Programmatic clients (bots, scripts, remote panels) authenticate with a Bearer token taken from Settings → Security → API Token. Both work for every endpoint under /panel/api/*."
     },
@@ -4423,6 +4613,280 @@
     }
   ],
   "paths": {
+    "/panel/api/tunnels/list": {
+      "get": {
+        "tags": [
+          "Call tunnels"
+        ],
+        "summary": "List local tunnels and attached node status",
+        "operationId": "get_panel_api_tunnels_list",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TunnelView"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": [
+                    {
+                      "error": "",
+                      "local": {
+                        "error": "",
+                        "exitIp": "203.0.113.1",
+                        "fingerprint": "",
+                        "installed": true,
+                        "port": 19094,
+                        "provider": "vk",
+                        "role": "client",
+                        "room": "https://vk.ru/call/join/example",
+                        "state": "active"
+                      },
+                      "pair": null,
+                      "peer": null,
+                      "provider": "vk"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/tunnels/create": {
+      "post": {
+        "tags": [
+          "Call tunnels"
+        ],
+        "summary": "Install or attach a tunnel pair; check and add outbound",
+        "operationId": "post_panel_api_tunnels_create",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "nodeId": {
+                    "type": "integer",
+                    "description": ""
+                  },
+                  "outboundTag": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "adopt": {
+                    "type": "boolean",
+                    "description": ""
+                  },
+                  "room": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": ""
+                  },
+                  "serverPort": {
+                    "type": "integer",
+                    "description": ""
+                  }
+                },
+                "required": [
+                  "provider",
+                  "nodeId",
+                  "outboundTag",
+                  "adopt",
+                  "room",
+                  "address",
+                  "port",
+                  "serverPort"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/tunnels/{provider}/{action}": {
+      "post": {
+        "tags": [
+          "Call tunnels"
+        ],
+        "summary": "Check, restart or change call link on an attached pair",
+        "operationId": "post_panel_api_tunnels_provider_action",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "description": "check, restart, room",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "room": {
+                    "type": "string",
+                    "description": ""
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/tunnels/local/{provider}/{action}": {
+      "post": {
+        "tags": [
+          "Call tunnels"
+        ],
+        "summary": "Internal node operation: status, install, probe, restart or room",
+        "operationId": "post_panel_api_tunnels_local_provider_action",
+        "description": "Admin-only endpoint. Installation carries a shared secret over the authenticated node connection. Never log request bodies.",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Status"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "error": "",
+                    "exitIp": "203.0.113.1",
+                    "fingerprint": "",
+                    "installed": true,
+                    "port": 19094,
+                    "provider": "vk",
+                    "role": "client",
+                    "room": "https://vk.ru/call/join/example",
+                    "state": "active"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/login": {
       "post": {
         "tags": [

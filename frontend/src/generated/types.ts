@@ -891,6 +891,16 @@ export interface RealityScanResult {
   x25519: boolean;
 }
 
+export interface Request {
+  address: string;
+  fingerprint: string;
+  port: number;
+  role: string;
+  room: string;
+  secret?: string;
+  serverPort: number;
+}
+
 export interface ServerSettings {
   contentPaddingAddition?: string;
   disableCookies: boolean;
@@ -937,6 +947,18 @@ export interface Setting {
   value: string;
 }
 
+export interface Status {
+  error?: string;
+  exitIp?: string;
+  fingerprint?: string;
+  installed: boolean;
+  port: number;
+  provider: string;
+  role: string;
+  room: string;
+  state: string;
+}
+
 export interface SubBalancer {
   createdAt: number;
   enabled: boolean;
@@ -975,6 +997,34 @@ export interface TuicServerSettings {
   sni?: string;
   udp_relay_mode: string;
   zero_rtt_handshake: boolean;
+}
+
+export interface TunnelCreate {
+  address: string;
+  adopt: boolean;
+  nodeId: number;
+  outboundTag: string;
+  port: number;
+  provider: string;
+  room: string;
+  serverPort: number;
+}
+
+export interface TunnelPair {
+  exitIp?: string;
+  lastCheck?: string;
+  lastError?: string;
+  nodeId: number;
+  outboundTag: string;
+  provider: string;
+}
+
+export interface TunnelView {
+  error?: string;
+  local: Status;
+  pair?: TunnelPair | null;
+  peer?: Status | null;
+  provider: string;
 }
 
 export interface User {
