@@ -1,3 +1,5 @@
+> **Форк с VK/Телемостом:** актуальная [инструкция для этого форка](README.md#quick-start-for-this-fork). Команды установки ниже относятся к оригинальному MHSanaei/3x-ui и не устанавливают наш патч. Авторство и лицензия оригинального проекта сохранены.
+
 [English](/README.md) | [فارسی](/README.fa_IR.md) | [العربية](/README.ar_EG.md) | [中文](/README.zh_CN.md) | [Español](/README.es_ES.md) | [Русский](/README.ru_RU.md) | [Türkçe](/README.tr_TR.md)
 
 <p align="center">

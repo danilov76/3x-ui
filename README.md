@@ -1,4 +1,6 @@
-> **Fork extension:** VK / Telemost tunnel management on v3.8.5. See [features, requirements and limitations](docs/call-tunnels.md).
+> **This fork:** [danilov76/3x-ui](https://github.com/danilov76/3x-ui), based on upstream v3.8.5, adds VK / Telemost tunnel management. See [fork setup](#quick-start-for-this-fork) and [features and limitations](docs/call-tunnels.md).
+>
+> **Original project:** [MHSanaei/3x-ui](https://github.com/MHSanaei/3x-ui), by MHSanaei and contributors. Original copyright notices and the [GPL-3.0 license](LICENSE) are preserved. This is an independent downstream fork, not an official upstream release.
 
 [English](/README.md) | [فارسی](/README.fa_IR.md) | [العربية](/README.ar_EG.md) | [中文](/README.zh_CN.md) | [Español](/README.es_ES.md) | [Русский](/README.ru_RU.md) | [Türkçe](/README.tr_TR.md)
 
@@ -8,6 +10,8 @@
     <img alt="3x-ui" src="./media/3x-ui-light.png">
   </picture>
 </p>
+
+<p align="center"><strong>Original project links and badges</strong></p>
 
 <p align="center">
   <a href="https://github.com/MHSanaei/3x-ui/releases"><img src="https://img.shields.io/github/v/release/mhsanaei/3x-ui" alt="Release"></a>
@@ -73,39 +77,60 @@ Built as an enhanced fork of the original X-UI project, 3X-UI adds broader proto
 
 </details>
 
-## Quick Start
+## Quick Start for This Fork
+
+The patched branch is **`codex/vk-telemost-tunnels`**, based on **v3.8.5**.
+This fork currently publishes source code; a ready-to-install fork release
+including the external tunnel engines has not been published.
+
+> [!IMPORTANT]
+> Do not use the upstream `curl ... install.sh` command to install or update this
+> fork: it installs the original panel without the Tunnels feature. Changing only
+> the script URL to `danilov76/3x-ui` is also insufficient: the inherited
+> `install.sh`, update scripts, cloud-init templates and Docker images still
+> target upstream artifacts. A normal upstream panel update replaces the patch.
+
+### Build the patched panel
+
+Prerequisites: Git, Go 1.27+, Node.js 24, npm and a C compiler for SQLite.
+The VK / Telemost service manager supports Linux amd64 with systemd 247+.
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+git clone --branch codex/vk-telemost-tunnels --single-branch \
+  https://github.com/danilov76/3x-ui.git 3x-ui-tunnels
+cd 3x-ui-tunnels
+cd frontend
+npm ci
+npm run build
+cd ..
+go build -trimpath -ldflags='-s -w' -o x-ui .
+./x-ui -v
 ```
 
-To install a specific version, append its tag (e.g. `v3.7.0`):
+These commands build `./x-ui`; they do not install or restart a server.
+The base version remains `3.8.5`; the added **Tunnels** page identifies the
+extension. Record the Git commit when distributing your build.
 
-```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v3.7.0
-```
+### Deploying the build
 
-To install the rolling **dev** build (latest per-commit pre-release from `main`, not a stable release), pass `dev-latest`:
+For an existing **3x-ui 3.8.5** installation, back up the database and panel
+binary before replacing the panel binary. Preserve the installed Xray binary
+and existing tunnel service configuration. Deploy this panel build on both the
+controlling server and each managed tunnel node, then attach the existing
+services from **Tunnels → Attach existing**. See the [tunnel guide](docs/call-tunnels.md)
+for service paths, API permissions and checks.
 
-```bash
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) dev-latest
-```
+A panel build alone does not install `olcrtc` or `turnrelay`. Creating new tunnel
+services also requires the checksum-pinned engine bundle described in that
+guide. This source-only procedure is not a fresh-VPS installer.
 
-During installation a random username, password, and access path are generated. After installation, run `x-ui` to open the management menu, where you can start/stop the service, view or reset your login credentials, manage SSL certificates, and more.
+### Original project documentation
 
-Every release asset is published with a `.sha256` sum next to it. Both `install.sh` and the updater verify the archive against that sum and abort on a mismatch.
-
-For full documentation — installation, configuration, operations, and the complete API reference — visit **[docs.sanaei.dev](https://docs.sanaei.dev)**.
-
-### Unattended install
-
-The installer also runs **non-interactively** for cloud-init.
-Set `XUI_NONINTERACTIVE=1` (or pipe with no TTY) and it installs end-to-end with
-zero prompts, generating random credentials and writing them to
-`/etc/x-ui/install-result.env`. See [`deploy/`](deploy/) for:
-
-- [Cloud-init user-data](deploy/cloud-init/) — unattended install on any cloud (Hetzner/AWS/DO/Vultr/GCP/Azure/Oracle)
-- [Hetzner Cloud notes](deploy/marketplace/hetzner/) — cloud-init deployment on Hetzner
+The remaining platform, Docker and deployment examples below describe the
+original 3x-ui project. In particular, upstream Docker images and the inherited
+[`deploy/`](deploy/) cloud-init templates do **not** include this fork's patch.
+Original installation and operation documentation is maintained by MHSanaei at
+[docs.sanaei.dev](https://docs.sanaei.dev).
 
 ## Supported Platforms
 
@@ -203,7 +228,7 @@ Tools and integrations built by the community around 3x-ui.
 - [terraform-provider-3x-ui](https://github.com/batonogov/terraform-provider-threexui) (License: **MIT**): _Manage inbounds, clients, panel settings, and Xray configuration as code with Terraform / OpenTofu._
 - [3X-UI Manager](https://github.com/yukh975/3X-UI-Manager) (License: **MIT**): _Native Android client for 3x-ui — dashboard, inbounds, clients with QR sharing, nodes and multi-panel management. Available on F-Droid._
 
-## Support project
+## Support the original project
 
 **If this project is helpful to you, you may wish to give it a**:star2:
 
