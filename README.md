@@ -80,8 +80,10 @@ Built as an enhanced fork of the original X-UI project, 3X-UI adds broader proto
 ## Quick Start for This Fork
 
 The patched branch is **`codex/vk-telemost-tunnels`**, based on **v3.8.5**.
-This fork currently publishes source code; a ready-to-install fork release
-including the external tunnel engines has not been published.
+A Linux amd64 upgrade bundle with the panel, tunnel engines, source code and
+licenses is available in [tunnels-3.8.5-patch2](https://github.com/danilov76/3x-ui/releases/tag/tunnels-3.8.5-patch2).
+It upgrades an existing **3x-ui 3.8.5** installation; it does not provision a bare VPS.
+See the [installation and rollback instructions](docs/tunnels-release-install.md).
 
 > [!IMPORTANT]
 > Do not use the upstream `curl ... install.sh` command to install or update this
