@@ -15,11 +15,11 @@ import tarfile
 import tempfile
 import time
 
-BASE = 'https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch2'
-FORK_HASH = '947dadead4ad64fb58cda65f68a3bf8f9bb3d58c66fc486212dbb3464d618142'
+BASE = 'https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch3'
+FORK_HASH = '99c5afc7a69dce0b0562e1d3041d9f3e2f64313f4f4d48425d116414e30e2da9'
 UPSTREAM = 'https://github.com/MHSanaei/3x-ui/releases/download/v3.8.5/x-ui-linux-amd64.tar.gz'
 UPSTREAM_HASH = '6a85c110a04a727613c933c54ae602b8d37dab8876c6e20a6d46623010dd9d3c'
-PANEL_HASH = '27c5e084435952016674ed59c52aedb7b55162cf09da5a7d7dfa4d1951713f80'
+PANEL_HASH = '658db647e5122036600ec2ed31115476919b5c3ddffd423be353fc99a79d2bf5'
 DESTINATIONS = ['/usr/local/x-ui', '/etc/x-ui', '/usr/local/share/x-ui-tunnels',
                 '/etc/systemd/system/x-ui.service', '/etc/default/x-ui', '/usr/bin/x-ui',
                 '/etc/turnrelay-vk', '/etc/olcrtc']
