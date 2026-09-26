@@ -196,3 +196,105 @@ func TestCallTunnelInstallAndRefuseOverwrite(t *testing.T) {
 		})
 	}
 }
+
+func TestMultipleInstancesStayIsolated(t *testing.T) {
+	for _, provider := range []string{"vk", "telemost"} {
+		t.Run(provider, func(t *testing.T) {
+			root := t.TempDir()
+			binary := "olcrtc"
+			if provider == "vk" {
+				binary = "turnrelay-proxy"
+			}
+			payload := []byte("test binary")
+			sum := sha256.Sum256(payload)
+			oldHash := binaryHashes[binary]
+			binaryHashes[binary] = hex.EncodeToString(sum[:])
+			t.Cleanup(func() { binaryHashes[binary] = oldHash })
+			dest := filepath.Join(root, "usr/local/share/x-ui-tunnels", binary)
+			if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(dest, payload, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			var restarted []string
+			managers := []*Manager{New(), NewInstance("first"), NewInstance("second")}
+			for i, m := range managers {
+				m.Root = root
+				m.Run = func(_ context.Context, _ string, args ...string) ([]byte, error) {
+					if args[0] == "--version" {
+						return []byte("systemd 255"), nil
+					}
+					if args[0] == "restart" {
+						restarted = append(restarted, args[1])
+					}
+					return []byte("active"), nil
+				}
+				room := "https://vk.ru/call/join/old"
+				if provider == "telemost" {
+					room = "https://telemost.360.yandex.ru/j/123"
+				}
+				r := Request{Role: "client", Room: room, Secret: strings.Repeat("ab", 32), Address: "203.0.113.1", Port: 19400 + i, ServerPort: 56100 + i, Fingerprint: strings.Repeat("cd", 32)}
+				if _, err := m.Action(context.Background(), provider, "install", r); err != nil {
+					t.Fatal(err)
+				}
+				st := m.Status(context.Background(), provider)
+				if st.InstanceID != m.InstanceID || st.Port != r.Port || st.Role != "client" {
+					t.Fatalf("bad instance status: %+v", st)
+				}
+			}
+			legacySpec, _ := managers[0].spec(provider)
+			secondSpec, _ := managers[2].spec(provider)
+			legacy, _ := managers[0].read(legacySpec.config)
+			second, _ := managers[2].read(secondSpec.config)
+			room := "https://vk.ru/call/join/new"
+			if provider == "telemost" {
+				room = "https://telemost.360.yandex.ru/j/456"
+			}
+			if _, err := managers[1].Action(context.Background(), provider, "room", Request{Room: room}); err != nil {
+				t.Fatal(err)
+			}
+			if st := managers[1].Status(context.Background(), provider); st.Room != room {
+				t.Fatal("selected room unchanged")
+			}
+			for _, check := range []struct {
+				m *Manager
+				s spec
+				b []byte
+			}{{managers[0], legacySpec, legacy}, {managers[2], secondSpec, second}} {
+				now, _ := check.m.read(check.s.config)
+				if string(now) != string(check.b) {
+					t.Fatal("other instance configuration changed")
+				}
+			}
+			wanted, _ := managers[1].spec(provider)
+			if len(restarted) != 1 || restarted[0] != wanted.unit {
+				t.Fatalf("restarted wrong services: %v", restarted)
+			}
+			unit, err := os.ReadFile(managers[1].path("/etc/systemd/system/" + wanted.unit))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(string(unit), wanted.config) || !strings.Contains(string(unit), filepath.Dir(wanted.binary)) {
+				t.Fatal("unit points outside instance")
+			}
+		})
+	}
+}
+
+func TestInvalidInstanceCannotAccessLegacy(t *testing.T) {
+	for _, id := range []string{"../vk", "a/b", "UPPER", "", "bad.service", strings.Repeat("x", 33)} {
+		if id == "" {
+			continue
+		}
+		m := NewInstance(id)
+		m.Root = t.TempDir()
+		m.Run = func(context.Context, string, ...string) ([]byte, error) {
+			t.Fatal("invalid ID ran a command")
+			return nil, nil
+		}
+		if _, err := m.Action(context.Background(), "vk", "restart", Request{}); err == nil {
+			t.Fatalf("accepted ID %q", id)
+		}
+	}
+}

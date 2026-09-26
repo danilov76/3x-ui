@@ -27,6 +27,7 @@ import (
 )
 
 type Status struct {
+	InstanceID  string `json:"instanceId,omitempty"`
 	Provider    string `json:"provider" example:"vk"`
 	Installed   bool   `json:"installed" example:"true"`
 	State       string `json:"state" example:"active"`
@@ -39,6 +40,7 @@ type Status struct {
 }
 
 type Request struct {
+	InstanceID  string `json:"instanceId,omitempty"`
 	Role        string `json:"role"`
 	Room        string `json:"room"`
 	Secret      string `json:"secret,omitempty"`
@@ -63,11 +65,38 @@ var (
 )
 
 type Manager struct {
-	Root string
-	Run  func(context.Context, string, ...string) ([]byte, error)
+	InstanceID string
+	Root       string
+	Run        func(context.Context, string, ...string) ([]byte, error)
 }
 
 func New() *Manager { return &Manager{Run: command} }
+
+// Empty ID selects the legacy installation; existing services are never renamed.
+func NewInstance(id string) *Manager { m := New(); m.InstanceID = id; return m }
+
+var instancePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,31}$`)
+
+func ValidInstance(id string) bool { return id == "" || instancePattern.MatchString(id) }
+func (m *Manager) spec(provider string) (spec, bool) {
+	s, ok := specs[provider]
+	if !ok || !ValidInstance(m.InstanceID) {
+		return spec{}, false
+	}
+	if m.InstanceID == "" {
+		return s, true
+	}
+	name := "xui-tunnel-" + provider + "-" + m.InstanceID
+	return spec{name + ".service", "/etc/" + name + "/config.json", "/opt/" + name + "/" + filepath.Base(s.binary), "/etc/" + name + "/secret"}, true
+}
+
+func (m *Manager) stateName() string {
+	if m.InstanceID == "" {
+		return "turnrelay-vk"
+	}
+	return "xui-tunnel-vk-" + m.InstanceID
+}
+
 func command(ctx context.Context, name string, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
@@ -138,7 +167,7 @@ func (m *Manager) write(path string, data []byte, mode os.FileMode) error {
 }
 
 func (m *Manager) config(provider string) (map[string]any, error) {
-	s, ok := specs[provider]
+	s, ok := m.spec(provider)
 	if !ok {
 		return nil, errors.New("unknown tunnel provider")
 	}
@@ -184,8 +213,8 @@ func nested(c map[string]any, k string) map[string]any { v, _ := c[k].(map[strin
 func text(c map[string]any, k string) string           { v, _ := c[k].(string); return v }
 func number(c map[string]any, k string) int            { v, _ := c[k].(float64); return int(v) }
 func (m *Manager) Status(ctx context.Context, provider string) Status {
-	out := Status{Provider: provider, State: "not-installed"}
-	s, ok := specs[provider]
+	out := Status{InstanceID: m.InstanceID, Provider: provider, State: "not-installed"}
+	s, ok := m.spec(provider)
 	if !ok {
 		out.Error = "unknown provider"
 		return out
@@ -207,9 +236,9 @@ func (m *Manager) Status(ctx context.Context, provider string) Status {
 			return out
 		}
 		switch a[0] {
-		case "/opt/turnrelay-vk/turnrelay-proxy":
+		case s.binary:
 			out.Role = "client"
-		case "/opt/turnrelay-vk/turnrelay-server":
+		case filepath.Join(filepath.Dir(s.binary), "turnrelay-server"):
 			out.Role = "server"
 		default:
 			out.Error = "unsupported VK executable"
@@ -247,7 +276,7 @@ func (m *Manager) Status(ctx context.Context, provider string) Status {
 }
 
 func (m *Manager) fingerprint() (string, error) {
-	b, err := os.ReadFile(m.path("/var/lib/turnrelay-vk/cert.pem"))
+	b, err := os.ReadFile(m.path("/var/lib/" + m.stateName() + "/cert.pem"))
 	if err != nil {
 		return "", err
 	}
@@ -263,7 +292,7 @@ func (m *Manager) fingerprint() (string, error) {
 }
 
 func (m *Manager) Restart(ctx context.Context, p string) error {
-	s, ok := specs[p]
+	s, ok := m.spec(p)
 	if !ok {
 		return errors.New("unknown provider")
 	}
@@ -282,7 +311,7 @@ func (m *Manager) Room(ctx context.Context, p, room string) error {
 	if err != nil {
 		return errors.New("cannot read tunnel configuration")
 	}
-	s := specs[p]
+	s, _ := m.spec(p)
 	old, err := m.read(s.config)
 	if err != nil {
 		return err
@@ -292,7 +321,7 @@ func (m *Manager) Room(ctx context.Context, p, room string) error {
 		if e != nil {
 			return e
 		}
-		if a[0] != "/opt/turnrelay-vk/turnrelay-proxy" {
+		if a[0] != s.binary {
 			return errors.New("VK link belongs on the client only")
 		}
 		found := 0
@@ -384,7 +413,7 @@ func (m *Manager) Probe(ctx context.Context, p string) (Status, error) {
 }
 
 func (m *Manager) Action(ctx context.Context, p, action string, r Request) (Status, error) {
-	if _, ok := specs[p]; !ok {
+	if _, ok := m.spec(p); !ok {
 		return Status{}, errors.New("unknown provider")
 	}
 	if action == "status" {

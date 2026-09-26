@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const TunnelStatusSchema = z.object({
+  instanceId: z.string().optional(),
   provider: z.string(),
   installed: z.boolean(),
   state: z.string(),
@@ -12,6 +13,7 @@ export const TunnelStatusSchema = z.object({
   error: z.string().optional(),
 });
 export const TunnelPairSchema = z.object({
+  instanceId: z.string().optional(),
   provider: z.string(),
   nodeId: z.number(),
   outboundTag: z.string(),
@@ -20,6 +22,7 @@ export const TunnelPairSchema = z.object({
   lastError: z.string().optional(),
 });
 export const TunnelViewSchema = z.object({
+  instanceId: z.string().optional(),
   provider: z.enum(['vk', 'telemost']),
   pair: TunnelPairSchema.optional(),
   local: TunnelStatusSchema,
@@ -30,6 +33,10 @@ export const TunnelListSchema = z.array(TunnelViewSchema);
 export type TunnelView = z.infer<typeof TunnelViewSchema>;
 export const TunnelCreateSchema = z
   .object({
+    instanceId: z
+      .string()
+      .regex(/^([a-z0-9][a-z0-9-]{0,31})?$/)
+      .optional(),
     provider: z.enum(['vk', 'telemost']),
     nodeId: z.number().int().positive(),
     outboundTag: z.string().regex(/^[A-Za-z0-9_.-]{1,100}$/),

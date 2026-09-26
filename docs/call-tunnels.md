@@ -1,7 +1,6 @@
 # VK / Telemost tunnel management
 
-This fork adds a **Tunnels** page to 3x-ui **v3.8.5**. It manages one VK pair
-and one Telemost pair: the current panel is the client, and an existing node
+This fork adds a **Tunnels** page to 3x-ui **v3.8.5**. It manages multiple independent VK and Telemost pairs: the current panel is the client, and an existing node
 is the remote server.
 
 ## Features
@@ -62,8 +61,7 @@ panel update replaces this fork build and removes its added UI/API.
 
 Service `active` does not prove connectivity; the separate check makes an HTTPS
 request to `api.ipify.org`. It does not benchmark throughput or verify UDP.
-Call creation and CAPTCHA handling are manual. Multiple pairs per provider,
-service deletion, and key rotation are not implemented. A distributed install
+Call creation and CAPTCHA handling are manual. Service deletion and key rotation are not implemented. A distributed install
 can leave one endpoint installed if the second endpoint fails; it does not
 overwrite that installation on retry. Use an independent control path where
 possible, since restarting the tunnel carrying the node API can interrupt it.
@@ -74,3 +72,13 @@ frontend type checking/lint/build, and Go lint. Existing-service attachment and
 HTTPS egress were also checked on live SQLite and PostgreSQL deployments.
 Fresh two-server provisioning and the complete Storybook/CI suite have not
 been validated. This is a downstream extension, not an upstream release.
+
+## Multiple instances (patch 3)
+
+Each new pair receives a random `instanceId`, its own SOCKS port, outbound, service, configuration, secret and VK certificate directory. Multiple pairs can use the same provider and node; VK server UDP ports must be distinct on that node. Use a separate call link for each Telemost pair.
+
+New services are named `xui-tunnel-<provider>-<id>.service`, configuration lives under `/etc/xui-tunnel-<provider>-<id>/`, binaries under `/opt/xui-tunnel-<provider>-<id>/`, and VK state under `/var/lib/xui-tunnel-vk-<id>/`. Changing a call or restarting a card affects only that pair.
+
+Existing records without `instanceId` select the original legacy service. No files, links, secrets, ports, outbound tags or routes are migrated or renamed. Install patch 3 on nodes before the controlling panel. An instance operation is refused if the remote panel does not echo the requested ID.
+
+For API actions include `instanceId` in the JSON body; omitting it selects only legacy, never an arbitrary pair. For adoption leave the ID empty for an original service or supply the matching ID on both endpoints. A partially completed installation reports its ID for recovery.

@@ -216,6 +216,13 @@ export const sections: readonly Section[] = [
         summary: 'Install or attach a tunnel pair; check and add outbound',
         params: [
           { name: 'provider', in: 'body (json)', type: 'string' },
+          {
+            name: 'instanceId',
+            in: 'body (json)',
+            type: 'string',
+            optional: true,
+            desc: 'Empty for legacy adoption; generated for a new installation.',
+          },
           { name: 'nodeId', in: 'body (json)', type: 'integer' },
           { name: 'outboundTag', in: 'body (json)', type: 'string' },
           { name: 'adopt', in: 'body (json)', type: 'boolean' },
@@ -231,6 +238,13 @@ export const sections: readonly Section[] = [
         summary: 'Check, restart or change call link on an attached pair',
         params: [
           { name: 'provider', in: 'path', type: 'string' },
+          {
+            name: 'instanceId',
+            in: 'body (json)',
+            type: 'string',
+            optional: true,
+            desc: 'Selects the exact instance; empty selects legacy only.',
+          },
           { name: 'action', in: 'path', type: 'string', desc: 'check, restart, room' },
           { name: 'room', in: 'body (json)', type: 'string', optional: true },
         ],
@@ -244,6 +258,13 @@ export const sections: readonly Section[] = [
         responseSchema: 'Status',
         params: [
           { name: 'provider', in: 'path', type: 'string' },
+          {
+            name: 'instanceId',
+            in: 'body (json)',
+            type: 'string',
+            optional: true,
+            desc: 'Selects the exact instance; empty selects legacy only.',
+          },
           { name: 'action', in: 'path', type: 'string' },
         ],
       },

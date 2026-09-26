@@ -2260,7 +2260,7 @@
     },
     "tunnels": {
       "add": "Connect a tunnel",
-      "intro": "Manage VK and Telemost on this panel and a foreign node. Active service does not guarantee a working tunnel: use Check. Each provider supports one pair.",
+      "intro": "Manage VK and Telemost on this panel and a foreign node. Active service does not guarantee a working tunnel: use Check. Multiple independent pairs per provider are supported.",
       "local": "This server",
       "peer": "Foreign node",
       "outbound": "Outbound tag",
@@ -2274,6 +2274,8 @@
       "socksPort": "Local SOCKS port",
       "serverIP": "Foreign server IP",
       "udpPort": "Foreign UDP port",
+      "instanceId": "Tunnel ID",
+      "instanceHint": "Empty for the original legacy service",
       "attachHint": "Existing services are adopted without reinstalling. Both panels need this patch and the node API needs admin scope.",
       "installHint": "Requires root systemd panels and the binary bundle on both servers. Allow the foreign UDP port for VK. Adds an outbound after a successful check; routing remains unchanged.",
       "check": "Check / publish outbound",

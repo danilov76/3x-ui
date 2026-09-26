@@ -21,6 +21,7 @@ import (
 )
 
 type TunnelPair struct {
+	InstanceID  string `json:"instanceId,omitempty"`
 	Provider    string `json:"provider" example:"vk"`
 	NodeID      int    `json:"nodeId" example:"2"`
 	OutboundTag string `json:"outboundTag" example:"koara-vk"`
@@ -29,13 +30,15 @@ type TunnelPair struct {
 	LastError   string `json:"lastError,omitempty"`
 }
 type TunnelView struct {
-	Provider string             `json:"provider" example:"vk"`
-	Pair     *TunnelPair        `json:"pair,omitempty"`
-	Local    calltunnel.Status  `json:"local"`
-	Peer     *calltunnel.Status `json:"peer,omitempty"`
-	Error    string             `json:"error,omitempty"`
+	InstanceID string             `json:"instanceId,omitempty"`
+	Provider   string             `json:"provider" example:"vk"`
+	Pair       *TunnelPair        `json:"pair,omitempty"`
+	Local      calltunnel.Status  `json:"local"`
+	Peer       *calltunnel.Status `json:"peer,omitempty"`
+	Error      string             `json:"error,omitempty"`
 }
 type TunnelCreate struct {
+	InstanceID  string `json:"instanceId,omitempty"`
 	Provider    string `json:"provider" binding:"required"`
 	NodeID      int    `json:"nodeId" binding:"required"`
 	OutboundTag string `json:"outboundTag" binding:"required"`
@@ -94,7 +97,20 @@ func (s *CallTunnelService) peer(ctx context.Context, id int, p, action string, 
 	if err != nil {
 		return calltunnel.Status{}, err
 	}
-	return remote.CallTunnel(ctx, p, action, r)
+	if r.InstanceID != "" && action != "status" {
+		capability, e := remote.CallTunnel(ctx, p, "status", calltunnel.Request{InstanceID: r.InstanceID})
+		if e != nil {
+			return capability, e
+		}
+		if capability.InstanceID != r.InstanceID {
+			return capability, errors.New("node does not support this tunnel instance; update its panel first")
+		}
+	}
+	st, err := remote.CallTunnel(ctx, p, action, r)
+	if err == nil && st.InstanceID != r.InstanceID {
+		return st, errors.New("node does not support this tunnel instance; update its panel first")
+	}
+	return st, err
 }
 
 func (s *CallTunnelService) List(ctx context.Context) ([]TunnelView, error) {
@@ -102,23 +118,44 @@ func (s *CallTunnelService) List(ctx context.Context) ([]TunnelView, error) {
 	if err != nil {
 		return nil, err
 	}
-	out := make([]TunnelView, 0, 2)
-	for _, p := range []string{"vk", "telemost"} {
-		view := TunnelView{Provider: p, Local: calltunnel.New().Status(ctx, p)}
+	out := make([]TunnelView, len(pairs))
+	var wg sync.WaitGroup
+	slots := make(chan struct{}, 4)
+	for i, pair := range pairs {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			v := pair
+			view := TunnelView{InstanceID: pair.InstanceID, Provider: pair.Provider, Pair: &v}
+			select {
+			case slots <- struct{}{}:
+				defer func() { <-slots }()
+			case <-ctx.Done():
+				view.Error = "status request timed out"
+				out[i] = view
+				return
+			}
+			view.Local = calltunnel.NewInstance(pair.InstanceID).Status(ctx, pair.Provider)
+			peer, e := s.peer(ctx, pair.NodeID, pair.Provider, "status", calltunnel.Request{InstanceID: pair.InstanceID})
+			if e != nil {
+				view.Error = e.Error()
+			} else {
+				view.Peer = &peer
+			}
+			out[i] = view
+		}()
+	}
+	wg.Wait()
+	for _, provider := range []string{"vk", "telemost"} {
+		attached := false
 		for _, pair := range pairs {
-			if pair.Provider == p {
-				v := pair
-				view.Pair = &v
-				peer, e := s.peer(ctx, pair.NodeID, p, "status", calltunnel.Request{})
-				if e != nil {
-					view.Error = e.Error()
-				} else {
-					view.Peer = &peer
-				}
-				break
+			if pair.Provider == provider && pair.InstanceID == "" {
+				attached = true
 			}
 		}
-		out = append(out, view)
+		if !attached {
+			out = append(out, TunnelView{Provider: provider, Local: calltunnel.New().Status(ctx, provider)})
+		}
 	}
 	return out, nil
 }
@@ -126,21 +163,31 @@ func (s *CallTunnelService) List(ctx context.Context) ([]TunnelView, error) {
 func (s *CallTunnelService) Create(ctx context.Context, r TunnelCreate) error {
 	pairMutations.Lock()
 	defer pairMutations.Unlock()
-	if (r.Provider != "vk" && r.Provider != "telemost") || !outboundName.MatchString(r.OutboundTag) || r.NodeID <= 0 {
+	if (r.Provider != "vk" && r.Provider != "telemost") || !outboundName.MatchString(r.OutboundTag) || r.NodeID <= 0 || !calltunnel.ValidInstance(r.InstanceID) {
 		return errors.New("invalid tunnel parameters")
 	}
 	pairs, err := s.pairs()
 	if err != nil {
 		return err
 	}
+	if !r.Adopt && r.InstanceID == "" {
+		id := make([]byte, 8)
+		if _, err = rand.Read(id); err != nil {
+			return err
+		}
+		r.InstanceID = hex.EncodeToString(id)
+	}
 	for _, p := range pairs {
-		if p.Provider == r.Provider {
-			return errors.New("provider already attached; use its existing card")
+		if p.Provider == r.Provider && p.InstanceID == r.InstanceID {
+			return errors.New("tunnel instance already attached")
+		}
+		if p.OutboundTag == r.OutboundTag {
+			return errors.New("outbound is already assigned to another tunnel")
 		}
 	}
-	mgr := calltunnel.New()
+	mgr := calltunnel.NewInstance(r.InstanceID)
 	local := mgr.Status(ctx, r.Provider)
-	peer, err := s.peer(ctx, r.NodeID, r.Provider, "status", calltunnel.Request{})
+	peer, err := s.peer(ctx, r.NodeID, r.Provider, "status", calltunnel.Request{InstanceID: r.InstanceID})
 	if err != nil {
 		return err
 	}
@@ -175,7 +222,7 @@ func (s *CallTunnelService) Create(ctx context.Context, r TunnelCreate) error {
 		if _, err = rand.Read(key); err != nil {
 			return err
 		}
-		request := calltunnel.Request{Role: "server", Room: r.Room, Secret: hex.EncodeToString(key), Port: r.Port, ServerPort: r.ServerPort, Address: r.Address}
+		request := calltunnel.Request{InstanceID: r.InstanceID, Role: "server", Room: r.Room, Secret: hex.EncodeToString(key), Port: r.Port, ServerPort: r.ServerPort, Address: r.Address}
 		preflight := request
 		preflight.Role = "client"
 		preflight.Fingerprint = strings.Repeat("0", 64)
@@ -184,15 +231,15 @@ func (s *CallTunnelService) Create(ctx context.Context, r TunnelCreate) error {
 		}
 		peer, err = s.peer(ctx, r.NodeID, r.Provider, "install", request)
 		if err != nil {
-			return err
+			return fmt.Errorf("server installation for instance %s needs inspection before retry: %w", r.InstanceID, err)
 		}
 		request.Role = "client"
 		request.Fingerprint = peer.Fingerprint
 		if _, err = mgr.Action(ctx, r.Provider, "install", request); err != nil {
-			return fmt.Errorf("server installed; local installation needs attention: %w", err)
+			return fmt.Errorf("server installed for instance %s; local installation needs attention: %w", r.InstanceID, err)
 		}
 	}
-	pair := TunnelPair{Provider: r.Provider, NodeID: r.NodeID, OutboundTag: r.OutboundTag}
+	pair := TunnelPair{InstanceID: r.InstanceID, Provider: r.Provider, NodeID: r.NodeID, OutboundTag: r.OutboundTag}
 	pairs = append(pairs, pair)
 	if err = s.savePairs(pairs); err != nil {
 		return err
@@ -205,14 +252,14 @@ func (s *CallTunnelService) Create(ctx context.Context, r TunnelCreate) error {
 
 func (s *CallTunnelService) checkPublish(ctx context.Context, pairs *[]TunnelPair, index, retries int) error {
 	pair := &(*pairs)[index]
-	st, err := calltunnel.New().Probe(ctx, pair.Provider)
+	st, err := calltunnel.NewInstance(pair.InstanceID).Probe(ctx, pair.Provider)
 	for i := 0; err != nil && i < retries; i++ {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-time.After(2 * time.Second):
 		}
-		st, err = calltunnel.New().Probe(ctx, pair.Provider)
+		st, err = calltunnel.NewInstance(pair.InstanceID).Probe(ctx, pair.Provider)
 	}
 	pair.LastCheck = time.Now().UTC().Format(time.RFC3339)
 	pair.ExitIP = st.ExitIP
@@ -231,7 +278,14 @@ func (s *CallTunnelService) checkPublish(ctx context.Context, pairs *[]TunnelPai
 	return err
 }
 
-func (s *CallTunnelService) Action(ctx context.Context, provider, action, room string) error {
+func (s *CallTunnelService) Action(ctx context.Context, provider, action, room string, instanceIDs ...string) error {
+	instanceID := ""
+	if len(instanceIDs) > 0 {
+		instanceID = instanceIDs[0]
+	}
+	if !calltunnel.ValidInstance(instanceID) {
+		return errors.New("invalid tunnel instance")
+	}
 	pairMutations.Lock()
 	defer pairMutations.Unlock()
 	pairs, err := s.pairs()
@@ -240,7 +294,7 @@ func (s *CallTunnelService) Action(ctx context.Context, provider, action, room s
 	}
 	index := -1
 	for i := range pairs {
-		if pairs[i].Provider == provider {
+		if pairs[i].Provider == provider && pairs[i].InstanceID == instanceID {
 			index = i
 			break
 		}
@@ -249,15 +303,15 @@ func (s *CallTunnelService) Action(ctx context.Context, provider, action, room s
 		return errors.New("attach the tunnel first")
 	}
 	pair := pairs[index]
-	mgr := calltunnel.New()
+	mgr := calltunnel.NewInstance(pair.InstanceID)
 	switch action {
 	case "check":
 		return s.checkPublish(ctx, &pairs, index, 0)
 	case "restart":
-		if _, err = s.peer(ctx, pair.NodeID, provider, "restart", calltunnel.Request{}); err != nil {
+		if _, err = s.peer(ctx, pair.NodeID, provider, "restart", calltunnel.Request{InstanceID: pair.InstanceID}); err != nil {
 			return err
 		}
-		_, err = mgr.Action(ctx, provider, "restart", calltunnel.Request{})
+		_, err = mgr.Action(ctx, provider, "restart", calltunnel.Request{InstanceID: pair.InstanceID})
 		return err
 	case "room":
 		if err = calltunnel.ValidateRoom(provider, room); err != nil {
@@ -267,18 +321,18 @@ func (s *CallTunnelService) Action(ctx context.Context, provider, action, room s
 		if oldLocal.Error != "" || oldLocal.Role != "client" {
 			return errors.New("local client configuration is invalid")
 		}
-		oldPeer, e := s.peer(ctx, pair.NodeID, provider, "status", calltunnel.Request{})
+		oldPeer, e := s.peer(ctx, pair.NodeID, provider, "status", calltunnel.Request{InstanceID: pair.InstanceID})
 		if e != nil {
 			return e
 		}
 		if provider == "telemost" {
-			if _, err = s.peer(ctx, pair.NodeID, provider, "room", calltunnel.Request{Room: room}); err != nil {
+			if _, err = s.peer(ctx, pair.NodeID, provider, "room", calltunnel.Request{InstanceID: pair.InstanceID, Room: room}); err != nil {
 				return err
 			}
 		}
-		if _, err = mgr.Action(ctx, provider, "room", calltunnel.Request{Room: room}); err != nil {
+		if _, err = mgr.Action(ctx, provider, "room", calltunnel.Request{InstanceID: pair.InstanceID, Room: room}); err != nil {
 			if provider == "telemost" {
-				if _, rollback := s.peer(context.WithoutCancel(ctx), pair.NodeID, provider, "room", calltunnel.Request{Room: oldPeer.Room}); rollback != nil {
+				if _, rollback := s.peer(context.WithoutCancel(ctx), pair.NodeID, provider, "room", calltunnel.Request{InstanceID: pair.InstanceID, Room: oldPeer.Room}); rollback != nil {
 					return errors.New("room update failed and peer rollback failed; align both call links manually")
 				}
 			}

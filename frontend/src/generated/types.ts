@@ -894,6 +894,7 @@ export interface RealityScanResult {
 export interface Request {
   address: string;
   fingerprint: string;
+  instanceId?: string;
   port: number;
   role: string;
   room: string;
@@ -952,6 +953,7 @@ export interface Status {
   exitIp?: string;
   fingerprint?: string;
   installed: boolean;
+  instanceId?: string;
   port: number;
   provider: string;
   role: string;
@@ -1002,6 +1004,7 @@ export interface TuicServerSettings {
 export interface TunnelCreate {
   address: string;
   adopt: boolean;
+  instanceId?: string;
   nodeId: number;
   outboundTag: string;
   port: number;
@@ -1012,6 +1015,7 @@ export interface TunnelCreate {
 
 export interface TunnelPair {
   exitIp?: string;
+  instanceId?: string;
   lastCheck?: string;
   lastError?: string;
   nodeId: number;
@@ -1021,6 +1025,7 @@ export interface TunnelPair {
 
 export interface TunnelView {
   error?: string;
+  instanceId?: string;
   local: Status;
   pair?: TunnelPair | null;
   peer?: Status | null;

@@ -3971,6 +3971,9 @@
           "fingerprint": {
             "type": "string"
           },
+          "instanceId": {
+            "type": "string"
+          },
           "port": {
             "type": "integer"
           },
@@ -4176,6 +4179,9 @@
           "installed": {
             "example": true,
             "type": "boolean"
+          },
+          "instanceId": {
+            "type": "string"
           },
           "port": {
             "example": 19094,
@@ -4395,6 +4401,9 @@
           "adopt": {
             "type": "boolean"
           },
+          "instanceId": {
+            "type": "string"
+          },
           "nodeId": {
             "type": "integer"
           },
@@ -4431,6 +4440,9 @@
           "exitIp": {
             "type": "string"
           },
+          "instanceId": {
+            "type": "string"
+          },
           "lastCheck": {
             "type": "string"
           },
@@ -4460,6 +4472,9 @@
       "TunnelView": {
         "properties": {
           "error": {
+            "type": "string"
+          },
+          "instanceId": {
             "type": "string"
           },
           "local": {
@@ -4647,11 +4662,13 @@
                   "obj": [
                     {
                       "error": "",
+                      "instanceId": "",
                       "local": {
                         "error": "",
                         "exitIp": "203.0.113.1",
                         "fingerprint": "",
                         "installed": true,
+                        "instanceId": "",
                         "port": 19094,
                         "provider": "vk",
                         "role": "client",
@@ -4687,6 +4704,10 @@
                   "provider": {
                     "type": "string",
                     "description": ""
+                  },
+                  "instanceId": {
+                    "type": "string",
+                    "description": "Empty for legacy adoption; generated for a new installation."
                   },
                   "nodeId": {
                     "type": "integer",
@@ -4788,6 +4809,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "instanceId": {
+                    "type": "string",
+                    "description": "Selects the exact instance; empty selects legacy only."
+                  },
                   "room": {
                     "type": "string",
                     "description": ""
@@ -4848,6 +4873,22 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "instanceId": {
+                    "type": "string",
+                    "description": "Selects the exact instance; empty selects legacy only."
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -4874,6 +4915,7 @@
                     "exitIp": "203.0.113.1",
                     "fingerprint": "",
                     "installed": true,
+                    "instanceId": "",
                     "port": 19094,
                     "provider": "vk",
                     "role": "client",

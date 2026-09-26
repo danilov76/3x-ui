@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FormProvider, useWatch } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -55,10 +55,11 @@ export default function TunnelsPage() {
   const [room, setRoom] = useState('');
   const methods = useZodForm<TunnelCreate>(TunnelCreateSchema, {
     defaultValues: {
+      instanceId: '',
       provider: 'vk',
       nodeId: 0,
       outboundTag: 'vk-tunnel',
-      adopt: true,
+      adopt: false,
       room: '',
       address: '',
       port: 19094,
@@ -66,10 +67,6 @@ export default function TunnelsPage() {
     },
   });
   const provider = useWatch({ control: methods.control, name: 'provider' });
-  useEffect(() => {
-    methods.setValue('port', provider === 'vk' ? 19094 : 19090);
-    methods.setValue('outboundTag', provider === 'vk' ? 'koara-vk' : 'aeza-telemost');
-  }, [provider, methods]);
   const adopt = useWatch({ control: methods.control, name: 'adopt' });
   const query = useQuery({
     queryKey: key,
@@ -98,14 +95,19 @@ export default function TunnelsPage() {
   const create = methods.handleSubmit((data) => mutation.mutate({ path: 'create', data }));
   function openCreate(v?: TunnelView) {
     const p = v?.provider ?? 'vk';
+    const usedPorts = new Set((query.data ?? []).map((item) => item.local.port));
+    let port = p === 'vk' ? 19094 : 19090;
+    while (usedPorts.has(port) && port < 65535) port++;
+    const suffix = (query.data ?? []).filter((item) => item.pair).length + 1;
     methods.reset({
+      instanceId: v?.instanceId ?? '',
       provider: p,
       nodeId: 0,
-      outboundTag: p === 'vk' ? 'koara-vk' : 'aeza-telemost',
-      adopt: true,
+      outboundTag: `${p}-tunnel-${suffix}`,
+      adopt: !!v,
       room: v?.local.room ?? '',
       address: '',
-      port: v?.local.port || (p === 'vk' ? 19094 : 19090),
+      port: v?.local.port || port,
       serverPort: 56014,
     });
     setCreating(true);
@@ -114,7 +116,8 @@ export default function TunnelsPage() {
     modal.confirm({
       title: t('pages.tunnels.restart'),
       content: t('pages.tunnels.restartWarning'),
-      onOk: () => mutation.mutateAsync({ path: `${v.provider}/restart`, data: {} }),
+      onOk: () =>
+        mutation.mutateAsync({ path: `${v.provider}/restart`, data: { instanceId: v.instanceId } }),
     });
   }
   return (
@@ -157,9 +160,9 @@ export default function TunnelsPage() {
               <Spin spinning={query.isPending}>
                 <Row gutter={[16, 16]}>
                   {(query.data ?? []).map((v) => (
-                    <Col xs={24} xl={12} key={v.provider}>
+                    <Col xs={24} xl={12} key={`${v.provider}:${v.instanceId ?? ''}`}>
                       <Card
-                        title={v.provider === 'vk' ? 'VK' : 'Телемост'}
+                        title={`${v.provider === 'vk' ? 'VK' : 'Телемост'} · ${v.pair?.outboundTag ?? (v.instanceId || 'legacy')}`}
                         extra={
                           <Tag color={v.local.state === 'active' ? 'green' : 'default'}>
                             {v.local.state}
@@ -170,6 +173,11 @@ export default function TunnelsPage() {
                           column={1}
                           size="small"
                           items={[
+                            {
+                              key: 'instance',
+                              label: t('pages.tunnels.instanceId'),
+                              children: v.instanceId || 'legacy',
+                            },
                             {
                               key: 'local',
                               label: t('pages.tunnels.local'),
@@ -232,7 +240,10 @@ export default function TunnelsPage() {
                               <Button
                                 loading={mutation.isPending}
                                 onClick={() =>
-                                  mutation.mutate({ path: `${v.provider}/check`, data: {} })
+                                  mutation.mutate({
+                                    path: `${v.provider}/check`,
+                                    data: { instanceId: v.instanceId },
+                                  })
                                 }
                               >
                                 {t('pages.tunnels.check')}
@@ -286,6 +297,11 @@ export default function TunnelsPage() {
                       ]}
                     />
                   </FormField>
+                  {adopt && (
+                    <FormField name="instanceId" label={t('pages.tunnels.instanceId')}>
+                      <Input placeholder={t('pages.tunnels.instanceHint')} />
+                    </FormField>
+                  )}
                   <FormField
                     name="nodeId"
                     label={t('pages.tunnels.peer')}
@@ -338,7 +354,10 @@ export default function TunnelsPage() {
               okButtonProps={{ disabled: !roomTarget || !validCallURL(roomTarget.provider, room) }}
               onOk={() => {
                 if (roomTarget)
-                  mutation.mutate({ path: `${roomTarget.provider}/room`, data: { room } });
+                  mutation.mutate({
+                    path: `${roomTarget.provider}/room`,
+                    data: { room, instanceId: roomTarget.instanceId },
+                  });
               }}
             >
               <Typography.Paragraph>

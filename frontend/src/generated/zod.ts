@@ -951,6 +951,7 @@ export type RealityScanResult = z.infer<typeof RealityScanResultSchema>;
 export const RequestSchema = z.object({
   address: z.string(),
   fingerprint: z.string(),
+  instanceId: z.string().optional(),
   port: z.number().int(),
   role: z.string(),
   room: z.string(),
@@ -1012,6 +1013,7 @@ export const StatusSchema = z.object({
   exitIp: z.string().optional(),
   fingerprint: z.string().optional(),
   installed: z.boolean(),
+  instanceId: z.string().optional(),
   port: z.number().int(),
   provider: z.string(),
   role: z.string(),
@@ -1067,6 +1069,7 @@ export type TuicServerSettings = z.infer<typeof TuicServerSettingsSchema>;
 export const TunnelCreateSchema = z.object({
   address: z.string(),
   adopt: z.boolean(),
+  instanceId: z.string().optional(),
   nodeId: z.number().int(),
   outboundTag: z.string(),
   port: z.number().int(),
@@ -1078,6 +1081,7 @@ export type TunnelCreate = z.infer<typeof TunnelCreateSchema>;
 
 export const TunnelPairSchema = z.object({
   exitIp: z.string().optional(),
+  instanceId: z.string().optional(),
   lastCheck: z.string().optional(),
   lastError: z.string().optional(),
   nodeId: z.number().int(),
@@ -1088,6 +1092,7 @@ export type TunnelPair = z.infer<typeof TunnelPairSchema>;
 
 export const TunnelViewSchema = z.object({
   error: z.string().optional(),
+  instanceId: z.string().optional(),
   local: z.lazy(() => StatusSchema),
   pair: z.lazy(() => TunnelPairSchema).nullable().optional(),
   peer: z.lazy(() => StatusSchema).nullable().optional(),

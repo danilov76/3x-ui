@@ -44,7 +44,10 @@ func (m *Manager) install(ctx context.Context, p string, r Request, validateOnly
 	if os.Geteuid() != 0 && m.Root == "" {
 		return errors.New("installation requires a root panel service")
 	}
-	s := specs[p]
+	s, ok := m.spec(p)
+	if !ok {
+		return errors.New("invalid tunnel instance")
+	}
 	for _, path := range []string{s.config, s.secret, "/etc/systemd/system/" + s.unit} {
 		if _, err := os.Lstat(m.path(path)); !errors.Is(err, os.ErrNotExist) {
 			return errors.New("existing installation detected; use Attach existing")
@@ -76,7 +79,7 @@ func (m *Manager) install(ctx context.Context, p string, r Request, validateOnly
 		return errors.New("tunnel binary checksum mismatch")
 	}
 	if p == "vk" && r.Role == "server" {
-		for _, dir := range []string{"/var/lib/turnrelay-vk", "/var/lib/private/turnrelay-vk"} {
+		for _, dir := range []string{"/var/lib/" + m.stateName(), "/var/lib/private/" + m.stateName()} {
 			if _, e := os.Lstat(m.path(dir)); !errors.Is(e, os.ErrNotExist) {
 				return errors.New("existing VK certificate state detected")
 			}
@@ -116,25 +119,25 @@ func (m *Manager) install(ctx context.Context, p string, r Request, validateOnly
 	var config map[string]any
 	unit := "[Unit]\nDescription=3x-ui managed call tunnel\nAfter=network-online.target\nWants=network-online.target\n[Service]\nType=simple\nDynamicUser=yes\nRestart=always\nRestartSec=10\nTimeoutStopSec=10\nNoNewPrivileges=yes\nProtectSystem=strict\nProtectHome=yes\nPrivateTmp=yes\nMemoryMax=384M\nCPUWeight=10\nRestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK\n"
 	if p == "vk" {
-		a := []string{"/opt/turnrelay-vk/turnrelay-server", "-listen", fmt.Sprintf(":%d", r.ServerPort), "-mode", "srtp", "-cert", "/var/lib/turnrelay-vk/cert.pem", "-max-streams", "128"}
+		a := []string{filepath.Join(filepath.Dir(s.binary), "turnrelay-server"), "-listen", fmt.Sprintf(":%d", r.ServerPort), "-mode", "srtp", "-cert", "/var/lib/" + m.stateName() + "/cert.pem", "-max-streams", "128"}
 		if r.Role == "client" {
 			a = []string{s.binary, "-server", net.JoinHostPort(r.Address, strconv.Itoa(r.ServerPort)), "-links", r.Room, "-listen", net.JoinHostPort("127.0.0.1", strconv.Itoa(r.Port)), "-connections", "2", "-server-fingerprint", r.Fingerprint, "-stats", "60s"}
 		}
 		config = map[string]any{"args": a}
-		if err = m.write("/opt/turnrelay-vk/launch.py", []byte(launcher), 0o644); err != nil {
+		if err = m.write(filepath.Join(filepath.Dir(s.binary), "launch.py"), []byte(launcher), 0o644); err != nil {
 			return err
 		}
-		unit += "StateDirectory=turnrelay-vk\nLoadCredential=secret:" + s.secret + "\nLoadCredential=config:" + s.config + "\nExecStart=/usr/bin/python3 /opt/turnrelay-vk/launch.py\n"
+		unit += "StateDirectory=" + m.stateName() + "\nLoadCredential=secret:" + s.secret + "\nLoadCredential=config:" + s.config + "\nExecStart=/usr/bin/python3 " + filepath.Join(filepath.Dir(s.binary), "launch.py") + "\n"
 	} else {
 		mode := "srv"
 		if r.Role == "client" {
 			mode = "cnc"
 		}
-		config = map[string]any{"mode": mode, "auth": map[string]any{"provider": "telemost"}, "room": map[string]any{"id": r.Room}, "crypto": map[string]any{"key_file": "/run/credentials/olcrtc-telemost.service/crypto.key"}, "net": map[string]any{"transport": "vp8channel", "dns": resolver()}, "vp8": map[string]any{"fps": 30, "batch_size": 64}, "debug": false}
+		config = map[string]any{"mode": mode, "auth": map[string]any{"provider": "telemost"}, "room": map[string]any{"id": r.Room}, "crypto": map[string]any{"key_file": "/run/credentials/" + s.unit + "/crypto.key"}, "net": map[string]any{"transport": "vp8channel", "dns": resolver()}, "vp8": map[string]any{"fps": 30, "batch_size": 64}, "debug": false}
 		if r.Role == "client" {
 			config["socks"] = map[string]any{"host": "127.0.0.1", "port": r.Port}
 		}
-		unit += "LoadCredential=crypto.key:" + s.secret + "\nLoadCredential=config:" + s.config + "\nExecStart=/opt/olcrtc/olcrtc /run/credentials/olcrtc-telemost.service/config\n"
+		unit += "LoadCredential=crypto.key:" + s.secret + "\nLoadCredential=config:" + s.config + "\nExecStart=" + s.binary + " /run/credentials/" + s.unit + "/config\n"
 	}
 	unit += "[Install]\nWantedBy=multi-user.target\n"
 	b, err := json.MarshalIndent(config, "", "  ")

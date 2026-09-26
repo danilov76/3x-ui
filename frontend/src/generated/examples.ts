@@ -976,6 +976,7 @@ export const EXAMPLES: Record<string, unknown> = {
   "Request": {
     "address": "",
     "fingerprint": "",
+    "instanceId": "",
     "port": 0,
     "role": "",
     "room": "",
@@ -1031,6 +1032,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "exitIp": "203.0.113.1",
     "fingerprint": "",
     "installed": true,
+    "instanceId": "",
     "port": 19094,
     "provider": "vk",
     "role": "client",
@@ -1081,6 +1083,7 @@ export const EXAMPLES: Record<string, unknown> = {
   "TunnelCreate": {
     "address": "",
     "adopt": false,
+    "instanceId": "",
     "nodeId": 0,
     "outboundTag": "",
     "port": 0,
@@ -1090,6 +1093,7 @@ export const EXAMPLES: Record<string, unknown> = {
   },
   "TunnelPair": {
     "exitIp": "",
+    "instanceId": "",
     "lastCheck": "",
     "lastError": "",
     "nodeId": 2,
@@ -1098,11 +1102,13 @@ export const EXAMPLES: Record<string, unknown> = {
   },
   "TunnelView": {
     "error": "",
+    "instanceId": "",
     "local": {
       "error": "",
       "exitIp": "203.0.113.1",
       "fingerprint": "",
       "installed": true,
+      "instanceId": "",
       "port": 19094,
       "provider": "vk",
       "role": "client",

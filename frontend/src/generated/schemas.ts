@@ -3945,6 +3945,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "fingerprint": {
         "type": "string"
       },
+      "instanceId": {
+        "type": "string"
+      },
       "port": {
         "type": "integer"
       },
@@ -4150,6 +4153,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "installed": {
         "example": true,
         "type": "boolean"
+      },
+      "instanceId": {
+        "type": "string"
       },
       "port": {
         "example": 19094,
@@ -4369,6 +4375,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "adopt": {
         "type": "boolean"
       },
+      "instanceId": {
+        "type": "string"
+      },
       "nodeId": {
         "type": "integer"
       },
@@ -4405,6 +4414,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "exitIp": {
         "type": "string"
       },
+      "instanceId": {
+        "type": "string"
+      },
       "lastCheck": {
         "type": "string"
       },
@@ -4434,6 +4446,9 @@ export const SCHEMAS: Record<string, unknown> = {
   "TunnelView": {
     "properties": {
       "error": {
+        "type": "string"
+      },
+      "instanceId": {
         "type": "string"
       },
       "local": {

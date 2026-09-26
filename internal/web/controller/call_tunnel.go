@@ -40,7 +40,8 @@ func (a *CallTunnelController) create(c *gin.Context) {
 
 func (a *CallTunnelController) action(c *gin.Context) {
 	var r struct {
-		Room string `json:"room"`
+		Room       string `json:"room"`
+		InstanceID string `json:"instanceId"`
 	}
 	if err := c.ShouldBindJSON(&r); err != nil {
 		jsonMsg(c, "invalid request", err)
@@ -48,7 +49,7 @@ func (a *CallTunnelController) action(c *gin.Context) {
 	}
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(c.Request.Context()), 120*time.Second)
 	defer cancel()
-	jsonMsg(c, "", a.service.Action(ctx, c.Param("provider"), c.Param("action"), r.Room))
+	jsonMsg(c, "", a.service.Action(ctx, c.Param("provider"), c.Param("action"), r.Room, r.InstanceID))
 }
 
 func (a *CallTunnelController) local(c *gin.Context) {
@@ -59,6 +60,6 @@ func (a *CallTunnelController) local(c *gin.Context) {
 	}
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(c.Request.Context()), 40*time.Second)
 	defer cancel()
-	st, err := calltunnel.New().Action(ctx, c.Param("provider"), c.Param("action"), r)
+	st, err := calltunnel.NewInstance(r.InstanceID).Action(ctx, c.Param("provider"), c.Param("action"), r)
 	jsonObj(c, st, err)
 }
