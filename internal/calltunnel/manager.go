@@ -27,6 +27,7 @@ import (
 )
 
 type Status struct {
+	AutoPorts   bool   `json:"autoPorts"`
 	InstanceID  string `json:"instanceId,omitempty"`
 	Provider    string `json:"provider" example:"vk"`
 	Installed   bool   `json:"installed" example:"true"`
@@ -213,7 +214,7 @@ func nested(c map[string]any, k string) map[string]any { v, _ := c[k].(map[strin
 func text(c map[string]any, k string) string           { v, _ := c[k].(string); return v }
 func number(c map[string]any, k string) int            { v, _ := c[k].(float64); return int(v) }
 func (m *Manager) Status(ctx context.Context, provider string) Status {
-	out := Status{InstanceID: m.InstanceID, Provider: provider, State: "not-installed"}
+	out := Status{AutoPorts: true, InstanceID: m.InstanceID, Provider: provider, State: "not-installed"}
 	s, ok := m.spec(provider)
 	if !ok {
 		out.Error = "unknown provider"

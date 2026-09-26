@@ -11,7 +11,6 @@ import {
   Descriptions,
   Form,
   Input,
-  InputNumber,
   Layout,
   Modal,
   Radio,
@@ -61,12 +60,8 @@ export default function TunnelsPage() {
       outboundTag: 'vk-tunnel',
       adopt: false,
       room: '',
-      address: '',
-      port: 19094,
-      serverPort: 56014,
     },
   });
-  const provider = useWatch({ control: methods.control, name: 'provider' });
   const adopt = useWatch({ control: methods.control, name: 'adopt' });
   const query = useQuery({
     queryKey: key,
@@ -95,9 +90,6 @@ export default function TunnelsPage() {
   const create = methods.handleSubmit((data) => mutation.mutate({ path: 'create', data }));
   function openCreate(v?: TunnelView) {
     const p = v?.provider ?? 'vk';
-    const usedPorts = new Set((query.data ?? []).map((item) => item.local.port));
-    let port = p === 'vk' ? 19094 : 19090;
-    while (usedPorts.has(port) && port < 65535) port++;
     const suffix = (query.data ?? []).filter((item) => item.pair).length + 1;
     methods.reset({
       instanceId: v?.instanceId ?? '',
@@ -106,9 +98,6 @@ export default function TunnelsPage() {
       outboundTag: `${p}-tunnel-${suffix}`,
       adopt: !!v,
       room: v?.local.room ?? '',
-      address: '',
-      port: v?.local.port || port,
-      serverPort: 56014,
     });
     setCreating(true);
   }
@@ -190,6 +179,20 @@ export default function TunnelsPage() {
                                 ? `${nodes.find((n) => n.id === v.pair?.nodeId)?.name ?? v.pair.nodeId} · ${v.peer?.state ?? '—'}`
                                 : '—',
                             },
+                            {
+                              key: 'socks',
+                              label: t('pages.tunnels.socksPort'),
+                              children: v.local.port || '—',
+                            },
+                            ...(v.provider === 'vk' && v.peer?.port
+                              ? [
+                                  {
+                                    key: 'udp',
+                                    label: t('pages.tunnels.udpPort'),
+                                    children: v.peer.port,
+                                  },
+                                ]
+                              : []),
                             {
                               key: 'out',
                               label: t('pages.tunnels.outbound'),
@@ -321,19 +324,6 @@ export default function TunnelsPage() {
                       <FormField name="room" label={t('pages.tunnels.room')}>
                         <Input />
                       </FormField>
-                      <FormField name="port" label={t('pages.tunnels.socksPort')}>
-                        <InputNumber min={1} max={65535} />
-                      </FormField>
-                      {provider === 'vk' && (
-                        <>
-                          <FormField name="address" label={t('pages.tunnels.serverIP')}>
-                            <Input />
-                          </FormField>
-                          <FormField name="serverPort" label={t('pages.tunnels.udpPort')}>
-                            <InputNumber min={1} max={65535} />
-                          </FormField>
-                        </>
-                      )}
                     </>
                   )}
                   <Alert

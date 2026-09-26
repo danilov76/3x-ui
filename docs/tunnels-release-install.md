@@ -41,7 +41,7 @@
 Поддерживаются Ubuntu 24.04–26.x и Debian 12–13, amd64, systemd. На новой VPS выполни:
 
 ```bash
-curl -fL https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch3/install-fork.sh -o install-fork.sh
+curl -fL https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch4/install-fork.sh -o install-fork.sh
 sudo bash install-fork.sh --host YOUR_SERVER_IP
 ```
 
@@ -68,8 +68,8 @@ VPN-соединения. Самостоятельное обновление п
 Скачай комплект и проверь контрольную сумму:
 
 ```bash
-curl -fLO https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch3/3x-ui-tunnels-linux-amd64.tar.gz
-curl -fLO https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch3/3x-ui-tunnels-linux-amd64.tar.gz.sha256
+curl -fLO https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch4/3x-ui-tunnels-linux-amd64.tar.gz
+curl -fLO https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch4/3x-ui-tunnels-linux-amd64.tar.gz.sha256
 sha256sum -c 3x-ui-tunnels-linux-amd64.tar.gz.sha256
 tar -xzf 3x-ui-tunnels-linux-amd64.tar.gz
 cd 3x-ui-tunnels-release-3.8.5
@@ -144,7 +144,7 @@ sudo bash install-panel.sh --db postgres \
 
 На обеих VPS уже должны быть обновлены панель и комплект бинарников. В мастере
 выбери «Установить и проверить», провайдера, зарубежную ноду, ссылку и имя outbound.
-Для VK дополнительно укажи IP и UDP-порт зарубежного сервера. Открой выбранный
+IP берётся из выбранной зарубежной ноды. Порты назначаются автоматически. Для VK открой назначенный
 UDP-порт в firewall ОС и провайдера; мастер не меняет firewall автоматически.
 
 Секрет создаётся на главной панели и передаётся ноде по её HTTPS API. VK закрепляет
@@ -238,6 +238,6 @@ VK/Телемост через API проверено HTTPS-запросами. 
 
 ## Несколько пар одного провайдера
 
-Нажми «Добавить» → «Установить и проверить». Для новой пары выбери свободный локальный SOCKS-порт и отдельный outbound. Для нескольких VK-пар на одной ноде нужны разные UDP-порты; для каждой пары Телемоста используй отдельный звонок. ID создаётся автоматически. Каждая пара получает отдельные файлы и systemd-службы.
+Нажми «Добавить» → «Установить и проверить». Для новой пары выбери ноду и отдельный outbound. Локальный SOCKS-порт и UDP-порт VK на ноде назначаются автоматически; для каждой пары Телемоста используй отдельный звонок. ID создаётся автоматически. Каждая пара получает отдельные файлы и systemd-службы.
 
 Старые пары обозначены как legacy: их порты, службы, конфиги и outbound сохраняются. В режиме подключения существующей пары поле ID оставляют пустым для legacy или указывают ID нового экземпляра. Сначала обновляй ноды, затем главную панель.

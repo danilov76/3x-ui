@@ -38,6 +38,20 @@ func (m *Manager) Preflight(ctx context.Context, p string, r Request) error {
 }
 
 func (m *Manager) install(ctx context.Context, p string, r Request, validateOnly bool) error {
+	// A zero port requests allocation on the machine that actually owns the socket.
+	if p == "vk" && r.Role == "server" && r.ServerPort == 0 {
+		port, err := m.AvailablePort(ctx, "udp")
+		if err != nil {
+			return err
+		}
+		r.ServerPort = port
+	}
+	if r.Role == "server" && r.Port == 0 {
+		r.Port = 1
+	} // Unused on the server.
+	if p == "telemost" && r.ServerPort == 0 {
+		r.ServerPort = 1
+	} // No UDP listener.
 	if err := validateInstall(p, r); err != nil {
 		return err
 	}

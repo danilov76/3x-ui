@@ -1028,6 +1028,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "value": ""
   },
   "Status": {
+    "autoPorts": false,
     "error": "",
     "exitIp": "203.0.113.1",
     "fingerprint": "",
@@ -1104,6 +1105,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "error": "",
     "instanceId": "",
     "local": {
+      "autoPorts": false,
       "error": "",
       "exitIp": "203.0.113.1",
       "fingerprint": "",

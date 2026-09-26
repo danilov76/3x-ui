@@ -2277,7 +2277,7 @@
       "instanceId": "Tunnel ID",
       "instanceHint": "Empty for the original legacy service",
       "attachHint": "Existing services are adopted without reinstalling. Both panels need this patch and the node API needs admin scope.",
-      "installHint": "Requires root systemd panels and the binary bundle on both servers. Allow the foreign UDP port for VK. Adds an outbound after a successful check; routing remains unchanged.",
+      "installHint": "Requires root systemd panels and the binary bundle on both servers. Ports and node address are assigned automatically. Allow the assigned foreign UDP port for VK. Adds an outbound after a successful check; routing remains unchanged.",
       "check": "Check / publish outbound",
       "changeRoom": "Change call link",
       "restart": "Restart both ends",

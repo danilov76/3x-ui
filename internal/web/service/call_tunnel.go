@@ -208,12 +208,31 @@ func (s *CallTunnelService) Create(ctx context.Context, r TunnelCreate) error {
 		if err = calltunnel.ValidateRoom(r.Provider, r.Room); err != nil {
 			return err
 		}
-		// Validate the local install parameters before changing either endpoint.
-		if r.Provider == "vk" && net.ParseIP(r.Address) == nil {
-			return errors.New("VK requires the foreign server IP address")
+		// The selected node is the source of the endpoint address, never form input.
+		if r.Provider == "vk" {
+			node, e := s.GetById(r.NodeID)
+			if e != nil || node == nil {
+				return errors.New("node not found")
+			}
+			r.Address, err = tunnelNodeIP(ctx, node.Address)
+			if err != nil {
+				return err
+			}
 		}
-		if r.Port < 1 || r.Port > 65535 || r.ServerPort < 1 || r.ServerPort > 65535 {
-			return errors.New("ports must be 1..65535")
+		if r.Port == 0 {
+			r.Port, err = mgr.AvailablePort(ctx, "tcp")
+			if err != nil {
+				return err
+			}
+		}
+		if r.Port < 1 || r.Port > 65535 || r.ServerPort < 0 || r.ServerPort > 65535 {
+			return errors.New("invalid tunnel port")
+		}
+		if r.Provider == "vk" && r.ServerPort == 0 && !peer.AutoPorts {
+			return errors.New("update the foreign node panel to support automatic ports")
+		}
+		if r.Provider == "telemost" {
+			r.ServerPort = 1
 		}
 		if _, err = s.outbound(r.OutboundTag, r.Port, false); err != nil {
 			return err
@@ -226,12 +245,21 @@ func (s *CallTunnelService) Create(ctx context.Context, r TunnelCreate) error {
 		preflight := request
 		preflight.Role = "client"
 		preflight.Fingerprint = strings.Repeat("0", 64)
+		if preflight.ServerPort == 0 {
+			preflight.ServerPort = 1
+		} // Allocated by the remote install.
 		if err = mgr.Preflight(ctx, r.Provider, preflight); err != nil {
 			return err
 		}
 		peer, err = s.peer(ctx, r.NodeID, r.Provider, "install", request)
 		if err != nil {
 			return fmt.Errorf("server installation for instance %s needs inspection before retry: %w", r.InstanceID, err)
+		}
+		if r.Provider == "vk" {
+			if peer.Port < 1 || peer.Port > 65535 {
+				return errors.New("node installed but did not return its UDP port")
+			}
+			request.ServerPort = peer.Port
 		}
 		request.Role = "client"
 		request.Fingerprint = peer.Fingerprint
@@ -408,4 +436,24 @@ func (s *CallTunnelService) outbound(tag string, port int, apply bool) (string, 
 		}
 	}
 	return next, nil
+}
+
+// Resolve a node hostname once and persist the selected IP in the tunnel config.
+func tunnelNodeIP(ctx context.Context, address string) (string, error) {
+	address = strings.Trim(strings.TrimSpace(address), "[]")
+	if ip := net.ParseIP(address); ip != nil {
+		return ip.String(), nil
+	}
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	ips, err := net.DefaultResolver.LookupIPAddr(ctx, address)
+	if err != nil || len(ips) == 0 {
+		return "", errors.New("cannot resolve the selected node address")
+	}
+	for _, ip := range ips {
+		if v4 := ip.IP.To4(); v4 != nil {
+			return v4.String(), nil
+		}
+	}
+	return ips[0].IP.String(), nil
 }

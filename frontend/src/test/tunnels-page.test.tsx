@@ -45,6 +45,12 @@ describe('multiple tunnel cards', () => {
       ),
     );
     expect(screen.getByText('VK · first')).toBeTruthy();
+    fireEvent.click(screen.getByText('pages.tunnels.add'));
+    await screen.findByRole('button', { name: 'pages.tunnels.install' });
+    expect(screen.queryByLabelText('pages.tunnels.serverIP')).toBeNull();
+    expect(screen.queryByLabelText('pages.tunnels.socksPort')).toBeNull();
+    expect(screen.queryByLabelText('pages.tunnels.udpPort')).toBeNull();
+
     cache.clear();
   });
 });

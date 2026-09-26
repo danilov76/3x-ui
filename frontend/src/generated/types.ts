@@ -949,6 +949,7 @@ export interface Setting {
 }
 
 export interface Status {
+  autoPorts: boolean;
   error?: string;
   exitIp?: string;
   fingerprint?: string;

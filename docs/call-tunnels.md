@@ -79,6 +79,10 @@ Each new pair receives a random `instanceId`, its own SOCKS port, outbound, serv
 
 New services are named `xui-tunnel-<provider>-<id>.service`, configuration lives under `/etc/xui-tunnel-<provider>-<id>/`, binaries under `/opt/xui-tunnel-<provider>-<id>/`, and VK state under `/var/lib/xui-tunnel-vk-<id>/`. Changing a call or restarting a card affects only that pair.
 
-Existing records without `instanceId` select the original legacy service. No files, links, secrets, ports, outbound tags or routes are migrated or renamed. Install patch 3 on nodes before the controlling panel. An instance operation is refused if the remote panel does not echo the requested ID.
+Existing records without `instanceId` select the original legacy service. No files, links, secrets, ports, outbound tags or routes are migrated or renamed. Install patch 4 on nodes before the controlling panel. An instance operation is refused if the remote panel does not echo the requested ID.
 
 For API actions include `instanceId` in the JSON body; omitting it selects only legacy, never an arbitrary pair. For adoption leave the ID empty for an original service or supply the matching ID on both endpoints. A partially completed installation reports its ID for recovery.
+
+### Automatic endpoints (patch 4)
+
+New pairs allocate a local TCP SOCKS port in 19090–19999 and, for VK, a UDP port in 56000–56999 on the foreign node. Bound sockets, existing tunnel configurations (including stopped services), and Xray inbound ports are skipped. The VK address is resolved from the selected node address. Assigned ports appear on the tunnel card. Existing pairs retain their ports. Firewall rules are not changed; allow the assigned VK UDP port if needed. Update foreign panels first: automatic allocation requires their advertised support. API callers may still supply explicit ports.

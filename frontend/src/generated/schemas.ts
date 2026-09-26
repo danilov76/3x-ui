@@ -4140,6 +4140,9 @@ export const SCHEMAS: Record<string, unknown> = {
   },
   "Status": {
     "properties": {
+      "autoPorts": {
+        "type": "boolean"
+      },
       "error": {
         "type": "string"
       },
@@ -4179,6 +4182,7 @@ export const SCHEMAS: Record<string, unknown> = {
       }
     },
     "required": [
+      "autoPorts",
       "installed",
       "port",
       "provider",

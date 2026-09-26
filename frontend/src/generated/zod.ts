@@ -1009,6 +1009,7 @@ export const SettingSchema = z.object({
 export type Setting = z.infer<typeof SettingSchema>;
 
 export const StatusSchema = z.object({
+  autoPorts: z.boolean(),
   error: z.string().optional(),
   exitIp: z.string().optional(),
   fingerprint: z.string().optional(),

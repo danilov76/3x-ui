@@ -227,9 +227,21 @@ export const sections: readonly Section[] = [
           { name: 'outboundTag', in: 'body (json)', type: 'string' },
           { name: 'adopt', in: 'body (json)', type: 'boolean' },
           { name: 'room', in: 'body (json)', type: 'string' },
-          { name: 'address', in: 'body (json)', type: 'string' },
-          { name: 'port', in: 'body (json)', type: 'integer' },
-          { name: 'serverPort', in: 'body (json)', type: 'integer' },
+
+          {
+            name: 'port',
+            in: 'body (json)',
+            type: 'integer',
+            optional: true,
+            desc: '0 or omitted: allocate a free local SOCKS port.',
+          },
+          {
+            name: 'serverPort',
+            in: 'body (json)',
+            type: 'integer',
+            optional: true,
+            desc: '0 or omitted: allocate a free UDP port on the VK node.',
+          },
         ],
       },
       {

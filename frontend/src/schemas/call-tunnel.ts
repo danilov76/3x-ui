@@ -42,20 +42,11 @@ export const TunnelCreateSchema = z
     outboundTag: z.string().regex(/^[A-Za-z0-9_.-]{1,100}$/),
     adopt: z.boolean(),
     room: z.string(),
-    address: z.string(),
-    port: z.number().int().min(1).max(65535),
-    serverPort: z.number().int().min(1).max(65535),
   })
   .superRefine((v, ctx) => {
     if (v.adopt) return;
     if (!validCallURL(v.provider, v.room))
       ctx.addIssue({ code: 'custom', path: ['room'], message: 'pages.tunnels.invalidRoom' });
-    if (
-      v.provider === 'vk' &&
-      !z.ipv4().safeParse(v.address).success &&
-      !z.ipv6().safeParse(v.address).success
-    )
-      ctx.addIssue({ code: 'custom', path: ['address'], message: 'pages.tunnels.invalidIP' });
   });
 export type TunnelCreate = z.infer<typeof TunnelCreateSchema>;
 export function validCallURL(provider: string, value: string) {

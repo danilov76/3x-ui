@@ -4166,6 +4166,9 @@
       },
       "Status": {
         "properties": {
+          "autoPorts": {
+            "type": "boolean"
+          },
           "error": {
             "type": "string"
           },
@@ -4205,6 +4208,7 @@
           }
         },
         "required": [
+          "autoPorts",
           "installed",
           "port",
           "provider",
@@ -4664,6 +4668,7 @@
                       "error": "",
                       "instanceId": "",
                       "local": {
+                        "autoPorts": false,
                         "error": "",
                         "exitIp": "203.0.113.1",
                         "fingerprint": "",
@@ -4725,17 +4730,13 @@
                     "type": "string",
                     "description": ""
                   },
-                  "address": {
-                    "type": "string",
-                    "description": ""
-                  },
                   "port": {
                     "type": "integer",
-                    "description": ""
+                    "description": "0 or omitted: allocate a free local SOCKS port."
                   },
                   "serverPort": {
                     "type": "integer",
-                    "description": ""
+                    "description": "0 or omitted: allocate a free UDP port on the VK node."
                   }
                 },
                 "required": [
@@ -4743,10 +4744,7 @@
                   "nodeId",
                   "outboundTag",
                   "adopt",
-                  "room",
-                  "address",
-                  "port",
-                  "serverPort"
+                  "room"
                 ]
               }
             }
@@ -4911,6 +4909,7 @@
                 "example": {
                   "success": true,
                   "obj": {
+                    "autoPorts": false,
                     "error": "",
                     "exitIp": "203.0.113.1",
                     "fingerprint": "",

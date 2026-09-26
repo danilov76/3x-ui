@@ -62,3 +62,17 @@ func TestTunnelPairsKeepLegacyAndSelectExactInstance(t *testing.T) {
 		t.Fatalf("duplicate instance accepted: %v", err)
 	}
 }
+
+func TestTunnelNodeAddressUsesSelectedNodeIP(t *testing.T) {
+	for _, address := range []string{"203.0.113.5", "[2001:db8::1]"} {
+		got, err := tunnelNodeIP(context.Background(), address)
+		if err != nil || got != strings.Trim(address, "[]") {
+			t.Fatalf("bad selected node address: %q %v", got, err)
+		}
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := tunnelNodeIP(ctx, "node.invalid"); err == nil {
+		t.Fatal("unresolvable node address accepted")
+	}
+}

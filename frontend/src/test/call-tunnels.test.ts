@@ -14,9 +14,6 @@ describe('call tunnel form', () => {
       outboundTag: 'koara-vk',
       adopt: true,
       room: '',
-      address: '',
-      port: 19094,
-      serverPort: 56014,
     };
     expect(TunnelCreateSchema.safeParse(v).success).toBe(true);
     expect(TunnelCreateSchema.safeParse({ ...v, adopt: false }).success).toBe(false);
@@ -25,7 +22,6 @@ describe('call tunnel form', () => {
         ...v,
         adopt: false,
         room: 'https://vk.ru/call/join/id',
-        address: '203.0.113.1',
       }).success,
     ).toBe(true);
   });
