@@ -25,7 +25,7 @@ fi
 task_tmp=$(mktemp -d)
 trap 'rm -rf -- "$task_tmp"' EXIT
 curl -fsSL --retry 3 --connect-timeout 15 --max-time 120 \
-    https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch3/install-fork.py \
+    https://github.com/danilov76/3x-ui/releases/download/tunnels-3.8.5-patch4/install-fork.py \
     -o "$task_tmp/install-fork.py"
-printf '%s  %s\n' '9d809402eea9564de4ba20edde522bf05be9802feea4613280d8b86acb906299' "$task_tmp/install-fork.py" | sha256sum -c -
+printf '%s  %s\n' 'd038c3eb51d6cc7c827790d7753090195c530c722c262523b78a609d51dd5890' "$task_tmp/install-fork.py" | sha256sum -c -
 python3 "$task_tmp/install-fork.py" "$@"
