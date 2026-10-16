@@ -13,7 +13,7 @@ permissions:
   id-token: write
 
 jobs:
-  review:
+  review-configuration:
     if: >-
       (github.event_name == 'pull_request_target'
        && github.event.pull_request.user.type != 'Bot'
@@ -23,6 +23,27 @@ jobs:
           && github.event.issue.state == 'open'
           && startsWith(github.event.comment.body, '@claude review')
           && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check whether optional Claude review is configured
+        id: check
+        env:
+          REVIEW_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$REVIEW_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Claude review skipped: CLAUDE_CODE_OAUTH_TOKEN is not configured. No code review was performed."
+            echo "Claude review was **not performed**: configure CLAUDE_CODE_OAUTH_TOKEN to enable it." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  review:
+    needs: review-configuration
+    if: needs.review-configuration.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     concurrency:
