@@ -256,7 +256,9 @@ def main():
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         config = json.loads(args.config.read_text())
         if args.action == 'check': health(config)
-        elif args.action == 'backup': backup(config)
+        elif args.action == 'backup':
+            backup(config)
+            health(config)
         elif args.action == 'install': fresh(config)
         elif args.action == 'update': update(config)
         elif args.action == 'restore': restore(config)
