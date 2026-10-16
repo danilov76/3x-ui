@@ -2,9 +2,9 @@ package panel
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -40,8 +40,7 @@ type PanelUpdateInfo struct {
 }
 
 const (
-	panelUpdaterURL      = "https://raw.githubusercontent.com/MHSanaei/3x-ui/main/update.sh"
-	maxPanelUpdaterBytes = 2 << 20
+	forkReleaseTag = "tunnels-3.8.5-patch5"
 	// devReleaseTag is the fixed-tag rolling pre-release the CI force-moves to the
 	// newest main commit; the dev update channel installs from it.
 	devReleaseTag = "dev-latest"
@@ -125,23 +124,18 @@ func (s *PanelService) RestartPanel(delay time.Duration) error {
 	return nil
 }
 
-// GetUpdateInfo checks GitHub for the latest 3x-ui release. When the dev channel
-// is enabled on a dev build it compares commits against the rolling dev release;
-// otherwise it compares versions against the latest stable tag.
+// GetUpdateInfo compares compatible stable fork patch releases.
 func (s *PanelService) GetUpdateInfo() (*PanelUpdateInfo, error) {
-	if devChannelActive() {
-		return getDevUpdateInfo()
-	}
 	latest, err := fetchLatestPanelVersion()
 	if err != nil {
 		return nil, err
 	}
-	current := config.GetBaseVersion()
+	current := forkReleaseTag
 	return &PanelUpdateInfo{
 		Channel:         "stable",
 		CurrentVersion:  current,
 		LatestVersion:   latest,
-		UpdateAvailable: isNewerVersion(latest, current),
+		UpdateAvailable: newerForkRelease(latest, current),
 	}, nil
 }
 
@@ -213,6 +207,9 @@ func (s *PanelService) GetUpdateStatus() *PanelUpdateStatus {
 }
 
 func (s *PanelService) startUpdate(useDev bool) (int64, error) {
+	if useDev {
+		return 0, fmt.Errorf("the fork supports stable tunnel releases only; disable the dev channel")
+	}
 	runID := time.Now().UnixNano()
 	if !acquireUpdateSlot(runID) {
 		return 0, fmt.Errorf("a panel update is already in progress")
@@ -228,6 +225,9 @@ func (s *PanelService) startUpdate(useDev bool) (int64, error) {
 		return 0, fmt.Errorf("panel web update is supported only on Linux installations")
 	}
 
+	if _, err := exec.LookPath("python3"); err != nil {
+		return 0, fmt.Errorf("python3 is required for fork updates")
+	}
 	bash, err := exec.LookPath("bash")
 	if err != nil {
 		return 0, fmt.Errorf("bash is required to run the panel updater: %w", err)
@@ -371,49 +371,40 @@ func releaseUpdateSlot() {
 	updateMu.Unlock()
 }
 
-func downloadPanelUpdater() (string, error) {
-	client := (&service.SettingService{}).NewProxiedHTTPClient(15 * time.Second)
-	req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodGet, panelUpdaterURL, nil)
-	if reqErr != nil {
-		return "", fmt.Errorf("download panel updater: %w", reqErr)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("download panel updater: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("download panel updater: unexpected HTTP %d", resp.StatusCode)
-	}
+//go:embed fork-update.py
+var forkUpdater string
 
+func downloadPanelUpdater() (string, error) {
 	file, err := os.CreateTemp("", "3x-ui-update-*.sh")
 	if err != nil {
 		return "", err
 	}
 	path := file.Name()
-	ok := false
-	defer func() {
-		_ = file.Close()
-		if !ok {
-			_ = os.Remove(path)
-		}
-	}()
-
-	n, err := io.Copy(file, io.LimitReader(resp.Body, maxPanelUpdaterBytes+1))
+	script := "#!/bin/bash\nset -e\npython3 - <<'XUI_FORK_UPDATER'\n" + forkUpdater + "\nXUI_FORK_UPDATER\n"
+	_, err = file.WriteString(script)
+	closeErr := file.Close()
+	if err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Chmod(path, 0700)
+	}
 	if err != nil {
-		return "", fmt.Errorf("write panel updater: %w", err)
-	}
-	if n == 0 {
-		return "", fmt.Errorf("panel updater download is empty")
-	}
-	if n > maxPanelUpdaterBytes {
-		return "", fmt.Errorf("panel updater exceeds %d bytes", maxPanelUpdaterBytes)
-	}
-	if err := file.Chmod(0o700); err != nil {
+		os.Remove(path)
 		return "", err
 	}
-	ok = true
 	return path, nil
+}
+
+func newerForkRelease(latest, current string) bool {
+	re := regexp.MustCompile(`^tunnels-3\.8\.5-patch([0-9]+)$`)
+	a, b := re.FindStringSubmatch(latest), re.FindStringSubmatch(current)
+	if a == nil || b == nil {
+		return false
+	}
+	av, ea := strconv.Atoi(a[1])
+	bv, eb := strconv.Atoi(b[1])
+	return ea == nil && eb == nil && av > bv
 }
 
 func fetchLatestPanelVersion() (string, error) {
@@ -430,9 +421,9 @@ func fetchLatestPanelVersion() (string, error) {
 // fetchPanelRelease fetches a release from GitHub. An empty tag resolves the
 // latest stable release; a non-empty tag (e.g. dev-latest) resolves that tag.
 func fetchPanelRelease(tag string) (*service.Release, error) {
-	url := "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest"
+	url := "https://api.github.com/repos/danilov76/3x-ui/releases/latest"
 	if tag != "" {
-		url = "https://api.github.com/repos/MHSanaei/3x-ui/releases/tags/" + tag
+		url = "https://api.github.com/repos/danilov76/3x-ui/releases/tags/" + tag
 	}
 	client := (&service.SettingService{}).NewProxiedHTTPClient(10 * time.Second)
 	req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
