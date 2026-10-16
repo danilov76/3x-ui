@@ -1,0 +1,8 @@
+*.age
+*.key
+*.pem
+*.db*
+*.tar*
+config.json
+inventory*.json
+__pycache__/

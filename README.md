@@ -1,4 +1,6 @@
 > **This fork:** [danilov76/3x-ui](https://github.com/danilov76/3x-ui), based on upstream v3.8.5, adds VK / Telemost tunnel management. See [fork setup](#quick-start-for-this-fork) and [features and limitations](docs/call-tunnels.md).
+
+> **GitHub deployment:** [installation, checks, updates and encrypted backups](infra/README.md).
 >
 > **Original project:** [MHSanaei/3x-ui](https://github.com/MHSanaei/3x-ui), by MHSanaei and contributors. Original copyright notices and the [GPL-3.0 license](LICENSE) are preserved. This is an independent downstream fork, not an official upstream release.
 
