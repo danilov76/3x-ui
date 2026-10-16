@@ -2285,8 +2285,7 @@
       "bothEnds": "The new link will be applied to both Telemost endpoints and their services restarted.",
       "clientOnly": "The VK link is changed on this server only. The foreign VK service does not use a call link.",
       "done": "Operation completed",
-      "invalidRoom": "Enter a valid HTTPS call link for this provider",
-      "invalidIP": "Enter the foreign server IPv4 or IPv6 address"
+      "invalidRoom": "Enter a valid HTTPS call link for this provider"
     }
   },
   "tgbot": {

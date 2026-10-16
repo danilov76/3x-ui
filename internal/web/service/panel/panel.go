@@ -149,28 +149,6 @@ func devChannelActive() bool {
 	return err == nil && enabled
 }
 
-// getDevUpdateInfo compares the running commit against the commit recorded in the
-// rolling dev release.
-func getDevUpdateInfo() (*PanelUpdateInfo, error) {
-	release, err := fetchPanelRelease(devReleaseTag)
-	if err != nil {
-		return nil, err
-	}
-	latestCommit := extractReleaseCommit(release)
-	if latestCommit == "" {
-		return nil, fmt.Errorf("dev release commit is unknown")
-	}
-	currentCommit := config.GetBuildCommit()
-	return &PanelUpdateInfo{
-		Channel:         "dev",
-		CurrentVersion:  config.GetPanelVersion(),
-		CurrentCommit:   shortCommit(currentCommit),
-		LatestCommit:    shortCommit(latestCommit),
-		LatestVersion:   "dev+" + shortCommit(latestCommit),
-		UpdateAvailable: !commitsEqual(currentCommit, latestCommit),
-	}, nil
-}
-
 // StartUpdate starts the official updater using this panel's own channel
 // setting. Returns the run ID to pass to GetUpdateStatus so the caller can
 // tell this run's result apart from a stale one.
@@ -387,7 +365,7 @@ func downloadPanelUpdater() (string, error) {
 		err = closeErr
 	}
 	if err == nil {
-		err = os.Chmod(path, 0700)
+		err = os.Chmod(path, 0o700)
 	}
 	if err != nil {
 		os.Remove(path)
