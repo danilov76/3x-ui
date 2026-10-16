@@ -1,0 +1,18 @@
+name: Infrastructure validation
+on:
+  pull_request:
+    paths: ['infra/**', '.github/workflows/infra-*.yml']
+  push:
+    paths: ['infra/**', '.github/workflows/infra-*.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - run: python3 -m pip install 'ansible-core==2.18.6'
+      - run: python3 -m unittest discover -s infra/tests -v
+      - run: ansible-playbook -i 'target,' infra/playbook.yml --syntax-check

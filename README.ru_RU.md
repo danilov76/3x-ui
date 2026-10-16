@@ -1,5 +1,7 @@
 [English](/README.md) | [فارسی](/README.fa_IR.md) | [العربية](/README.ar_EG.md) | [中文](/README.zh_CN.md) | [Español](/README.es_ES.md) | [Русский](/README.ru_RU.md) | [Türkçe](/README.tr_TR.md)
 
+> **Автоматизация нашего форка:** [установка, обновление, зашифрованные бэкапы и восстановление через GitHub Actions](infra/README.md). Используется закреплённый релиз patch4; данные серверов хранятся в Environment Secrets.
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./media/3x-ui-dark.png">

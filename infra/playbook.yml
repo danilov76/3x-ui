@@ -1,0 +1,42 @@
+---
+- name: Operate one panel
+  hosts: target
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Protected operation
+      no_log: true
+      block:
+        - name: Install runtime dependencies for mutations
+          ansible.builtin.apt:
+            name: [python3, curl, ca-certificates, age, socat, cron]
+            state: present
+            update_cache: true
+            cache_valid_time: 3600
+          when: operation != 'check'
+        - name: Allocate private staging directory
+          ansible.builtin.tempfile:
+            state: directory
+            prefix: xui-infra-
+          register: stage
+        - name: Copy reviewed deployment tools
+          ansible.builtin.copy:
+            src: "{{ playbook_dir }}/"
+            dest: "{{ stage.path }}/"
+            mode: preserve
+        - name: Copy protected configuration
+          ansible.builtin.copy:
+            content: "{{ host_config | to_json }}"
+            dest: "{{ stage.path }}/config.json"
+            mode: '0600'
+        - name: Run operation without exposing subprocess output
+          ansible.builtin.command:
+            argv: [python3, "{{ stage.path }}/host.py", "{{ operation }}", "{{ stage.path }}/config.json"]
+          changed_when: operation != 'check'
+      always:
+        - name: Remove staging files and credentials
+          ansible.builtin.file:
+            path: "{{ stage.path }}"
+            state: absent
+          when: stage is defined and stage.path is defined
+          no_log: true
