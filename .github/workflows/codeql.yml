@@ -1,16 +1,6 @@
 name: "CodeQL Advanced"
 
 on:
-  push:
-    branches:
-      - main
-    tags-ignore:
-      - "v*"
-    paths:
-      - "**.go"
-      - "go.mod"
-      - "go.sum"
-      - "frontend/**"
   pull_request:
     paths:
       - "**.go"
