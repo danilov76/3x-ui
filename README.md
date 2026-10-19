@@ -81,7 +81,7 @@ Built as an enhanced fork of the original X-UI project, 3X-UI adds broader proto
 
 ## Quick Start for This Fork
 
-The patched branch is **`codex/vk-telemost-tunnels`**, based on **v3.8.5**.
+The patched branch is **`main`**, based on **v3.8.5**.
 A Linux amd64 upgrade bundle with the panel, tunnel engines, source code and
 licenses is available in [tunnels-3.8.5-patch4](https://github.com/danilov76/3x-ui/releases/tag/tunnels-3.8.5-patch4).
 The archive upgrades an existing **3x-ui 3.8.5** installation. A separate fresh-install script is also available for Ubuntu 24.04–26.x / Debian 12–13 amd64.
@@ -109,7 +109,7 @@ Prerequisites: Git, Go 1.27+, Node.js 24, npm and a C compiler for SQLite.
 The VK / Telemost service manager supports Linux amd64 with systemd 247+.
 
 ```bash
-git clone --branch codex/vk-telemost-tunnels --single-branch \
+git clone --branch main --single-branch \
   https://github.com/danilov76/3x-ui.git 3x-ui-tunnels
 cd 3x-ui-tunnels
 cd frontend

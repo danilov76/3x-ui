@@ -6,7 +6,7 @@
 
 ## Что запускается
 
-Actions → **Infrastructure operation** → Run workflow, основная ветка репозитория (`codex/vk-telemost-tunnels` в этом форке), Environment и операция:
+Actions → **Infrastructure operation** → Run workflow, основная ветка репозитория (`main` в этом форке), Environment и операция:
 
 | Операция | Поведение |
 |---|---|
